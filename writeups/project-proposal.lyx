@@ -1,0 +1,418 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\usepackage{algorithm,algpseudocode}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement H
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine biblatex
+\cite_engine_type numerical
+\biblio_style plain
+\biblatex_bibstyle numeric
+\biblatex_citestyle numeric
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+CS221 project proposal: AlphaZero for Autonomous Driving
+\end_layout
+
+\begin_layout Author
+xxx
+\end_layout
+
+\begin_layout Section
+Problem statement and candidate techniques
+\end_layout
+
+\begin_layout Subsection
+Problem to solve
+\end_layout
+
+\begin_layout Standard
+We want to solve a Decision Making problem.
+\end_layout
+
+\begin_layout Itemize
+Use Case: Motion Planning, controlling acceleration on a predefined path,
+ with many other objects crossing our path
+\end_layout
+
+\begin_layout Itemize
+No loss of generality as quite frequently motion planning is done in 2 steps:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Compute a path to follow: a path that is kinematically feasible and collision
+ free w.r.t.
+ static objects (checked against an occupancy grid)
+\end_layout
+
+\begin_layout Itemize
+Define a velocity profile on this path: that is collision free w.r.t.
+ dynamic objects
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+We have to plan a trajectory that is:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Collision free
+\end_layout
+
+\begin_layout Itemize
+Comfortable: we want to avoid too strong accelerations and decelerations
+\end_layout
+
+\begin_layout Itemize
+Efficient: go as fast as possible from point A to point B
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Sources of uncertainties:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Sensor uncertainty: state vector of other vehicles may not be known exactly
+\end_layout
+
+\begin_layout Itemize
+Driving Model uncertainty: CA, CV, IDM
+\end_layout
+
+\begin_layout Itemize
+Even without uncertainty the problem is already difficult to handle when
+ there are many objects around
+\end_layout
+
+\end_deeper
+\begin_layout Subsection
+Input-Output Model
+\end_layout
+
+\begin_layout Standard
+State Space is continuous, Action Space is Discrete
+\end_layout
+
+\begin_layout Itemize
+Inputs: state description 
+\begin_inset Formula $[x,y,\dot{x},\dot{y}]$
+\end_inset
+
+ or 
+\begin_inset Formula $[x,y,\dot{x},\dot{y,\ddot{x},\ddot{y}}]$
+\end_inset
+
+ for all objects
+\end_layout
+
+\begin_layout Itemize
+Ouput: longitudinal acceleration every 
+\begin_inset Formula $20$
+\end_inset
+
+ ms, discret set of actions considered 
+\begin_inset Formula $\{-4,-2,-1,0,1,2\}m.s^{-2}$
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Subsection
+Candidate Techniques to solve the problem
+\end_layout
+
+\begin_layout Standard
+Let's first consider the problem without sources of uncertainty.
+ Known state vectors, known driving models
+\end_layout
+
+\begin_layout Itemize
+Hard coded rule: to be used as a Baseline
+\end_layout
+
+\begin_layout Itemize
+Planning (or Model Based RL): MCTS tree search with progressive widening
+ to handle the continuous state space
+\end_layout
+
+\begin_layout Itemize
+Learning (or Model Free RL): DQN or Policy gradient algorithm that is trained
+ in simulation
+\end_layout
+
+\begin_layout Itemize
+Combining planning and learning: a MCTS tree search that is guided for more
+ efficient search by a trained NN.
+\end_layout
+
+\begin_layout Itemize
+Others: CSP ???
+\end_layout
+
+\begin_layout Standard
+The expected benefit of combining planning and learning is to make the search
+ much more efficient, so that in less iterations we find a good solution
+ suitable for real-time online planning.
+\end_layout
+
+\begin_layout Standard
+Sources of uncertainty are handled with POMDP models (more in the scope
+ of AA228/CS238 than CS221)
+\end_layout
+
+\begin_layout Section
+CS221 Project Setup
+\end_layout
+
+\begin_layout Standard
+All coding done in Python.
+ Deep learning part: pytorch or TF/Keras ??
+\end_layout
+
+\begin_layout Itemize
+simulator: uses standard open ai gym interfaces.
+ We can use an existing custom simulator 
+\begin_inset CommandInset href
+LatexCommand href
+name "gym-act"
+target "https://github.com/PhilippeW83440/CS234_Project/tree/master/gym-act"
+literal "false"
+
+\end_inset
+
+.
+ Or check if there are other existing simulators (if possible compatible
+ with open ai gym interfaces) dealing with a similar task
+\end_layout
+
+\begin_layout Itemize
+Baseline: a simple hard coded rule producing acceleration command every
+ 20 ms, a simple velocity profile generation
+\end_layout
+
+\begin_layout Itemize
+Oracle: MCTS tree search with many/many iterations (not suitable for realtime
+ online use).
+ 
+\end_layout
+
+\begin_layout Itemize
+Algo1 MCTS: planning based, MCTS tree serach with progressive widening cf
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Kochenderfer2015"
+literal "true"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Algo2 NN: learning based, CNN network for RL (DQN or Policy Gradient ??)
+ cf 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:journals/corr/abs-1803-10056"
+literal "true"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Algo3 MCTS-NN: combine algo1 and algo2 in a similar way than AlphaZero and
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:journals/corr/abs-1905-02680"
+literal "true"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+CS221 Project schedule
+\end_layout
+
+\begin_layout Itemize
+...
+ of October:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Reproduce AlphaZero simple setup
+\end_layout
+
+\begin_layout Itemize
+Outline differences between Chess game and Autonomous Driving use case
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+\begin_inset Formula $24^{th}$
+\end_inset
+
+ of October:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Simulator running
+\end_layout
+
+\begin_layout Itemize
+Baseline: results available
+\end_layout
+
+\begin_layout Itemize
+Oracle: Branch and Bound search results (cf 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Kochenderfer2015"
+literal "true"
+
+\end_inset
+
+ chapter 4.6.2)
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+\begin_inset Formula $14^{th}$
+\end_inset
+
+ of November:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+1st version of Algo1 MCTS
+\end_layout
+
+\begin_layout Itemize
+1st version of Algo2 NN
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+\begin_inset Formula $2^{nd}$
+\end_inset
+
+of December:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+1st version of algo3 MCTS-NN
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+\begin_inset Formula $13^{th}$
+\end_inset
+
+ of December:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Project report due
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+btprint "btPrintAll"
+bibfiles "project"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
