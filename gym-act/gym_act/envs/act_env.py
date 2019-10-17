@@ -472,7 +472,7 @@ class ActEnv(gym.Env):
 		s_rel = np.copy(s)
 		for n in range(self.nobjs):
 			for i in range(4):
-				s_rel[(n+1)*4+i] = s_rel[(n+1)*4+i] - s_rel[i] 
+				s_rel[(n+1)*4+i] = s_rel[(n+1)*4+i] - s_rel[i]
 		#s_rel[0:4] = 0 we need it for later use
 		return s_rel[4:]
 
