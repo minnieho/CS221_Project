@@ -3,6 +3,7 @@ import copy
 import random
 
 
+
 def get_dist(obj1, obj2):
 	return math.sqrt((obj1[0]-obj2[0])**2 + (obj1[1]-obj2[1])**2)
 
@@ -99,6 +100,8 @@ class ActProblem(): # Anti Collision Tests problem
 			sp, cost = self._step(s, a)
 			res.append((a, sp, cost))
 		return res
+
+random.seed(30)
 
 problem = ActProblem()
 start = problem.startState()
