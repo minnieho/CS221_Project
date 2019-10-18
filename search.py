@@ -54,33 +54,6 @@ def dynamicProgramming(problem):
 	s = problem.startState()
 	while not problem.isEnd(s):
 		_, a, s, cost = futureCost[s]
-		history.append((a, s, cost))
-	return minCost, history
-
-# use a hashable key
-def dynamicProgrammingHash(problem):
-	futureCost = {}
-	def recurse(s):
-		#skey = tuple(s[:4])
-		skey = tuple(s)
-		if skey in futureCost:
-			return futureCost[skey][0]
-		if problem.isEnd(s):
-			return 0
-		futureCost[skey] = min([(cost + recurse(sp), a, sp, cost) for a, sp, cost in problem.succAndCost(s)])
-
-		return futureCost[skey][0]
-
-	minCost = recurse(problem.startState())
-	print("minCost: {}".format(minCost))
-
-	# recover history
-	history = []
-	s = problem.startState()
-	while not problem.isEnd(s):
-		#skey = tuple(s[:4])
-		skey = tuple(s)
-		_, a, s, cost = futureCost[skey]
 		#history.append((a, s, cost))
 		history.append((a, cost))
 	return minCost, history
@@ -173,6 +146,6 @@ print("start state: {}".format(start))
 print(problem.isEnd(start))
 
 start = time.time()
-print(dynamicProgrammingHash(problem))
+print(dynamicProgramming(problem))
 end = time.time()
 print("DP time: {} sec".format(end-start))

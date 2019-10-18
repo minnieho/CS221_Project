@@ -63,7 +63,7 @@ class ActProblem(): # Anti Collision Tests problem
 		return state
 
 	def startState(self):
-		return self.start
+		return tuple(self.start) # to make it hashable
 
 	def isEnd(self, s):
 		return (s[1] >= self.goal[1])
@@ -92,7 +92,7 @@ class ActProblem(): # Anti Collision Tests problem
 
 	# CA model for the ego vehicle and CV model for other cars
 	def _step(self, state, action):
-		sp = copy.deepcopy(state)
+		sp = np.zeros_like(self.start)
 
 		s = state[0:4]
 		a = np.array([0.0, action])
@@ -118,7 +118,7 @@ class ActProblem(): # Anti Collision Tests problem
 		res = [] # (action, nextState, cost)
 		for a in self.actions:
 			sp, cost = self._step(s, a)
-			res.append((a, sp, cost))
+			res.append((a, tuple(sp), cost))
 		return res
 
 #random.seed(30)
