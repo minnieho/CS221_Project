@@ -1,11 +1,24 @@
 import numpy as np
 import copy
 import random
-
+import math
+import pdb
 
 
 def get_dist(obj1, obj2):
 	return math.sqrt((obj1[0]-obj2[0])**2 + (obj1[1]-obj2[1])**2)
+
+# Transition with Constant Acceleration model
+def transition_ca(s, a, dt):
+	Ts = np.matrix([[1.0, 0.0, dt,	0.0],
+					[0.0, 1.0, 0.0, dt],
+					[0.0, 0.0, 1.0, 0.0],
+					[0.0, 0.0, 0.0, 1.0]])
+	Ta = np.matrix([[0.5*dt**2, 0.0],
+					[0.0, 0.5*dt**2],
+					[dt, 0.0],
+					[0.0, dt]])
+	return np.dot(Ts, s) + np.dot(Ta, a)
 
 
 # -------------
@@ -18,18 +31,20 @@ def get_dist(obj1, obj2):
 
 class ActProblem(): # Anti Collision Tests problem
 	# actions are accelerations
-	def __init__(self, nobjs=10, dist_collision=10, dt=0.2, actions=[-2., -1., 0., +1., +2.]):
+	#def __init__(self, nobjs=10, dist_collision=10, dt=0.25, actions=[-4., -2., -1., 0., +1., +2.]):
+	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, actions=[-2., -1., 0., +1., +2.]):
 		self.nobjs = nobjs
 		self.dist_collision = dist_collision
 		self.dt = dt
 		self.actions = actions
 		# x, y, vx, vy
 		self.start = np.array([100.0,	0.0,  0.0,		20.0], dtype=float)
-		self.goal  = np.array([100.0, 200.0, 0.0, 0.0], dtype=float)
+		self.goal  = np.array([100.0, 50.0, 0.0, 0.0], dtype=float) # down from 200 to 50
+		self.start = self._randomStartState()
 
 	# stase is R44: 1 ego + 10 cars, 4 coordonates (x,y,vx,vy) each
-	def startState(self):
-		state = copy.copy(self.start)
+	def _randomStartState(self):
+		state = copy.deepcopy(self.start)
 		for n in range(int(self.nobjs/2)):
 			x = float(random.randint(0, 50))
 			y = float(random.randint(25, 190))
@@ -46,6 +61,9 @@ class ActProblem(): # Anti Collision Tests problem
 			obj = np.array([x, y, vx, vy])
 			state = np.append(state, obj)
 		return state
+
+	def startState(self):
+		return self.start
 
 	def isEnd(self, s):
 		return (s[1] >= self.goal[1])
@@ -68,12 +86,13 @@ class ActProblem(): # Anti Collision Tests problem
 						num_nearest_obj = n
 				idx += 4
 
-		return dist_nearest_obj, num_nearest_obj
+		#return dist_nearest_obj, num_nearest_obj
+		return dist_nearest_obj
 
 
 	# CA model for the ego vehicle and CV model for other cars
 	def _step(self, state, action):
-		sp = copy.copy(state)
+		sp = copy.deepcopy(state)
 
 		s = state[0:4]
 		a = np.array([0.0, action])
@@ -82,12 +101,13 @@ class ActProblem(): # Anti Collision Tests problem
 		idx = 4
 		for n in range(self.nobjs):
 			s_obj = state[idx:idx+4]
-			a_obj = np.array([0, 0.0]) # CV model so far
+			a_obj = np.array([0.0, 0.0]) # CV model so far
 			sp[idx:idx+4] = transition_ca(s_obj, a_obj, self.dt)
 			idx += 4
 
 		dist_nearest_obj = self._get_dist_nearest_obj(sp)
 		# collision or driving backward (negative speed)
+		#pdb.set_trace()
 		if dist_nearest_obj < self.dist_collision or sp[3] < 0:
 			cost = 1000
 		else:
@@ -101,10 +121,10 @@ class ActProblem(): # Anti Collision Tests problem
 			res.append((a, sp, cost))
 		return res
 
-random.seed(30)
-
-problem = ActProblem()
-start = problem.startState()
-print("start state: {}".format(start))
-print(problem.isEnd(start))
+#random.seed(30)
+#
+#problem = ActProblem()
+#start = problem.startState()
+#print("start state: {}".format(start))
+#print(problem.isEnd(start))
 
