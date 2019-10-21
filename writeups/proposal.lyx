@@ -97,7 +97,7 @@ Problem definition
 
 \begin_layout Standard
 We study the motion planning problem for Autonomous Driving.
- The behavioural planner defines a short term objective: where the ego vehicle
+ The behavioral planner defines a short term objective: where the ego vehicle
  shall go, with associated constraints.
  The local planner then computes a set of paths that are kinematically feasible
  and collision free with respect to static obstacles.
@@ -144,6 +144,24 @@ Given a path to follow and information about dynamic obstacles, we have
  An autonomous vehicle has to deal with many sources of uncertainties.
  We consider sensor uncertainty and driving model uncertainty which translate
  to dynamics uncertainties.
+ On the social impact aspect, as mentionned in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "article"
+literal "false"
+
+\end_inset
+
+: 
+\begin_inset Quotes eld
+\end_inset
+
+Autonomous vehicles are one of the most highly anticipated technological
+ developments of our time, with potentially wide-ranging social implications
+\begin_inset Quotes erd
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Section
@@ -357,13 +375,13 @@ Oracle: the search is challenging as the state space is big.
 \begin_inset Formula $100\%$
 \end_inset
 
- of the cases a collsion free solution; but in 
+ of the cases a collision free solution; but in 
 \begin_inset Formula $190.7$
 \end_inset
 
  seconds with UCS running on an iCore9.
  We explored the graph with a depth of 24, corresponding to a 6 seconds
- lookahead.
+ look-ahead.
  Our branching factor is 5.
 \end_layout
 
