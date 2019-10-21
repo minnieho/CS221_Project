@@ -39,7 +39,8 @@ class ActProblem(): # Anti Collision Tests problem
 		self.actions = actions
 		# x, y, vx, vy
 		self.start = np.array([100.0,	0.0,  0.0,		20.0], dtype=float)
-		self.goal  = np.array([100.0, 50.0, 0.0, 0.0], dtype=float) # down from 200 to 50
+		#self.goal  = np.array([100.0, 50.0, 0.0, 0.0], dtype=float) # down from 200 to 50
+		self.goal  = np.array([100.0, 100.0, 0.0, 0.0], dtype=float) # down from 200 to 50
 		self.start = self._randomStartState()
 
 	# stase is R44: 1 ego + 10 cars, 4 coordonates (x,y,vx,vy) each
@@ -107,11 +108,12 @@ class ActProblem(): # Anti Collision Tests problem
 
 		dist_nearest_obj = self._get_dist_nearest_obj(sp)
 		# collision or driving backward (negative speed)
-		#pdb.set_trace()
 		if dist_nearest_obj < self.dist_collision or sp[3] < 0:
 			cost = 1000
+		elif abs(action) >= 2:
+			cost = 2
 		else:
-			cost = 1 # TODO could be refined vs efficience and comfort
+			cost = 1
 		return sp, cost
 
 	def succAndCost(self, s):

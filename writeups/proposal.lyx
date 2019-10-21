@@ -84,7 +84,7 @@
 \begin_body
 
 \begin_layout Title
-Motion Planning for Autonomous Driving
+CS221 project proposal: Motion Planning for Autonomous Driving
 \end_layout
 
 \begin_layout Author
@@ -96,25 +96,40 @@ Problem definition
 \end_layout
 
 \begin_layout Standard
-Within an Autonomous Driving pipeline we consider the planning problem.
- The behavioural planner defines a short term objective: it selects a maneuver
- to perform and defines an objective, where the ego vehicle wants to go,
- with associated constraints.
- The local planner will then compute a set of paths that are kinematically
- feasible and collision free with respect to static obstacles.
- For every candidate path, a velocity profile will be generated in order
- to avoid dynamic obstacles.
- This 2 steps decomposition of local planning is typical to make the problem
+We study the motion planning problem for Autonomous Driving.
+ The behavioural planner defines a short term objective: where the ego vehicle
+ shall go, with associated constraints.
+ The local planner then computes a set of paths that are kinematically feasible
+ and collision free with respect to static obstacles.
+ For every candidate path, a velocity profile is generated to avoid dynamic
+ obstacles.
+ This two steps decomposition of local planning is typical to make the problem
  simpler to solve in real time.
- Ultimately different trajectories are ranked and a preferred one is selected.
 \end_layout
 
 \begin_layout Standard
-\align center
+\begin_inset Wrap figure
+lines 0
+placement R
+overhang 0in
+width "20col%"
+status open
+
+\begin_layout Plain Layout
+\align right
 \begin_inset Graphics
 	filename img/dpl.png
-	lyxscale 30
-	scale 30
+	lyxscale 18
+	scale 18
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
 
 \end_inset
 
@@ -122,16 +137,11 @@ Within an Autonomous Driving pipeline we consider the planning problem.
 \end_layout
 
 \begin_layout Standard
-We focus on the local motion planning problem: we are given a path to follow
- and information about dynamic obstacles.
- We have to define a velocity profile such that the trajectory is collision
- free, comfortable (without too strong accelerations or decelerations) and
- efficient (as close as possible to the target velocity).
- 
-\end_layout
-
-\begin_layout Standard
-An autonomous vehicle has to deal with many sources of uncertainties.
+Given a path to follow and information about dynamic obstacles, we have
+ to define a velocity profile such that the trajectory is collision free,
+ comfortable (without too strong accelerations or decelerations) and efficient
+ (as close as possible to the target velocity).
+ An autonomous vehicle has to deal with many sources of uncertainties.
  We consider sensor uncertainty and driving model uncertainty which translate
  to dynamics uncertainties.
 \end_layout
@@ -141,7 +151,61 @@ Proposed Approach
 \end_layout
 
 \begin_layout Standard
-From search to MDP search to AlphaZero.
+To define our Oracle we consider there is no uncertainty: sensors are perfect
+ and we know the driving models of every car.
+ The Oracle is a search algorithm without real-time constraints.
+ To define our baseline we set a simple rule for decision making: if the
+ smallest Time To Collision with respect to other cars is below 10 seconds
+ we decelerate by 
+\begin_inset Formula $-2m.s^{-2}$
+\end_inset
+
+ (as long as we see this collision risk) otherwise we accelerate at 
+\begin_inset Formula $1m.s^{-2}$
+\end_inset
+
+ (as long as we are below the speed limit) to reach our target as fast as
+ possible.
+\end_layout
+
+\begin_layout Standard
+Ultimately we will handle this problem as a MDP search problem as we are
+ dealing with uncertainty and we want to investigate how we can improve
+ real-time performances.
+ One possible track, as in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:journals/corr/abs-1905-02680"
+literal "false"
+
+\end_inset
+
+, is to combine planning and learning 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:journals/corr/abs-1803-10056"
+literal "false"
+
+\end_inset
+
+, in a similar way to AlphaZero 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:journals/corr/abs-1712-01815"
+literal "false"
+
+\end_inset
+
+, to have a good heuristic to efficiently guide the search of a MCTS tree
+ search 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Kochenderfer2015"
+literal "false"
+
+\end_inset
+
+ used for solving online our MDP problem.
 \end_layout
 
 \begin_layout Subsection
@@ -149,49 +213,108 @@ Model
 \end_layout
 
 \begin_layout Standard
-State Space is continuous, Action Space is Discrete
+The state space is continuous whereas the action space is discrete.
+ The model used by our Oracle is the following:
 \end_layout
 
 \begin_layout Itemize
-Inputs: state description 
+
+\series bold
+startState
+\series default
+: random initialization with 5 cars on the left and 5 cars on the right
+ with trajectories crossing the middle path, of the ego vehicle.
+ All the speed are initialized around 
+\begin_inset Formula $20ms^{-1}.$
+\end_inset
+
+ The ego vehicle is 
+\begin_inset Formula $200m$
+\end_inset
+
+ away from its target point: it shall find a velocity profile that is efficient
+ (fast), comfortable (limiting strong decelerations and accelerations) and
+ collision free for the proposed path.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+isEnd
+\series default
+: when target is reached by the ego vehicle
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+states
+\series default
+: a vector in 
+\begin_inset Formula $\mathbb{R}^{44}$
+\end_inset
+
+ with 
 \begin_inset Formula $[x,y,\dot{x},\dot{y}]$
 \end_inset
 
- for all objects
+ for 10+1 objects
 \end_layout
 
 \begin_layout Itemize
-Ouput: longitudinal acceleration every 
-\begin_inset Formula $20$
+
+\series bold
+actions
+\series default
+: every 
+\begin_inset Formula $250$
 \end_inset
 
- ms, discret set of actions considered 
-\begin_inset Formula $\{-4,-2,-1,0,1,2\}\;m.s^{-2}$
+ ms we choose an acceleration command out of  
+\begin_inset Formula $\{-2,-1,0,1,2\}\;m.s^{-2}$
 \end_inset
 
  
 \end_layout
 
+\begin_layout Itemize
+
+\series bold
+succAndCost
+\series default
+: the new state is computed based on a Constant Acceleration (over a time
+ step) model for the cars.
+ The cost is 
+\begin_inset Formula $1000$
+\end_inset
+
+ for a collision, 1 for an acceleration command 
+\begin_inset Formula $\in[-1,0,1]\;ms^{-2}$
+\end_inset
+
+ and 2 for uncomfortable accelerations 
+\begin_inset Formula $\pm2\;ms^{-2}$
+\end_inset
+
+.
+ The evolution from one state to the next state is deterministic: with probabili
+ty 1 the surrounding vehicles use an acceleration of 
+\begin_inset Formula $0.$
+\end_inset
+
+ We will introduce uncertainty later on.
+ 
+\end_layout
+
 \begin_layout Subsection
-Inference
+Algorithms
 \end_layout
 
 \begin_layout Standard
-Without uncertainty, search problem: DP and UCS
-\end_layout
-
-\begin_layout Standard
-With uncertainty, MDP problem: online MCTS tree search
-\end_layout
-
-\begin_layout Subsection
-Learning
-\end_layout
-
-\begin_layout Standard
-We want to learn a usefull heuristic to make the search more efficient.
- We will study the applicability of AlphaZero to Motion Planning: how we
- could combine planning and learning.
+We use Dynamic Programming and Uniform Cost Search algorithms to solve the
+ above problem for the Oracle.
+ We use a simple rule, at every time step, for the baseline decision making.
+ We will investigate MDP search in the next steps.
 \end_layout
 
 \begin_layout Section
@@ -199,19 +322,49 @@ Experimental Setup and Status
 \end_layout
 
 \begin_layout Standard
-Experiments: cf github
+The source code is available here: 
+\begin_inset CommandInset href
+LatexCommand href
+name "CS221 Project"
+target "https://github.com/PhilippeW83440/CS221_Project"
+literal "false"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Itemize
-Baseline: it is fast but bad
+Baseline: the decision is fast, immediate, but we find a collision free
+ velocity profile only in 
+\begin_inset Formula $35\%$
+\end_inset
+
+ of the cases.
 \end_layout
 
 \begin_layout Itemize
-Oracle: it is slow but good (assuming everything is known, no uncertainty)
-\end_layout
+Oracle: the search is challenging as the state space is big.
+ With a time step of 
+\begin_inset Formula $250$
+\end_inset
 
-\begin_layout Section
-Related work
+ ms, looking for a collision free velocity profile over the next 
+\begin_inset Formula $100$
+\end_inset
+
+ meters we find in 
+\begin_inset Formula $100\%$
+\end_inset
+
+ of the cases a collsion free solution; but in 
+\begin_inset Formula $190.7$
+\end_inset
+
+ seconds with UCS running on an iCore9.
+ We explored the graph with a depth of 24, corresponding to a 6 seconds
+ lookahead.
+ Our branching factor is 5.
 \end_layout
 
 \begin_layout Standard
