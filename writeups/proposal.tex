@@ -6,6 +6,7 @@
 \usepackage{babel}
 \usepackage{float}
 \usepackage{wrapfig}
+\usepackage{amstext}
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage[unicode=true]
@@ -114,9 +115,10 @@ free velocity profile only in $35\%$ of the cases.
 \item Oracle: the search is challenging as the state space is big. With
 a time step of $250$ ms, looking for a collision free velocity profile
 over the next $100$ meters we find in $100\%$ of the cases a collision
-free solution; but in $190.7$ seconds with UCS running on an iCore9.
-We explored the graph with a depth of 24, corresponding to a 6 seconds
-look-ahead. Our branching factor is 5.
+free solution; but in $47.2$ seconds with UCS and in $190.7$ seconds
+with DP running on an iCore9. We explored the graph with a depth of
+24. UCS has a complexity of $\mathcal{O}(n\log n)$ with $n=\left|\text{states}\right|$.
+It potentially explores fewer states than DP.
 \end{itemize}
 \nocite{*}
 \printbibliography

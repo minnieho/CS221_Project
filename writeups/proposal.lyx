@@ -376,13 +376,25 @@ Oracle: the search is challenging as the state space is big.
 \end_inset
 
  of the cases a collision free solution; but in 
+\begin_inset Formula $47.2$
+\end_inset
+
+ seconds with UCS and in 
 \begin_inset Formula $190.7$
 \end_inset
 
- seconds with UCS running on an iCore9.
- We explored the graph with a depth of 24, corresponding to a 6 seconds
- look-ahead.
- Our branching factor is 5.
+ seconds with DP running on an iCore9.
+ We explored the graph with a depth of 24.
+ UCS has a complexity of 
+\begin_inset Formula $\mathcal{O}(n\log n)$
+\end_inset
+
+ with 
+\begin_inset Formula $n=\left|\text{states}\right|$
+\end_inset
+
+.
+ It potentially explores fewer states than DP.
 \end_layout
 
 \begin_layout Standard

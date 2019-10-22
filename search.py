@@ -88,7 +88,8 @@ def uniformCostSearch(problem):
 	##sate = end_state
 	while s is not None:
 		pastCost, prev_s, prev_a, prev_cost = explored[s]
-		history.append((prev_a, s, prev_cost))
+		#history.append((prev_a, s, prev_cost))
+		history.append((prev_a, prev_cost))
 		s = prev_s
 	history.reverse()
 	history = (minCost, history)
@@ -146,6 +147,7 @@ print("start state: {}".format(start))
 print(problem.isEnd(start))
 
 start = time.time()
-print(dynamicProgramming(problem))
+#print(dynamicProgramming(problem))
+uniformCostSearch(problem)
 end = time.time()
 print("DP time: {} sec".format(end-start))
