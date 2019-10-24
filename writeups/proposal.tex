@@ -45,13 +45,12 @@ in real time.
 Given a path to follow and information about dynamic obstacles, we
 have to define a velocity profile such that the trajectory is collision
 free, comfortable (without too strong accelerations or decelerations)
-and efficient (as close as possible to the target velocity). An autonomous
-vehicle has to deal with many sources of uncertainties. We consider
-sensor uncertainty and driving model uncertainty which translate to
-dynamics uncertainties. On the social impact aspect, as mentionned
-in \cite{article}: ``Autonomous vehicles are one of the most highly
-anticipated technological developments of our time, with potentially
-wide-ranging social implications''.
+and efficient (close to the target velocity). An autonomous vehicle
+has to deal with many sources of uncertainties. We consider sensor
+uncertainty and driving model uncertainty which translate to dynamics
+uncertainties. On the social impact aspect, as mentioned in \cite{article}:
+``Autonomous vehicles are one of the most highly anticipated technological
+developments of our time, with potentially wide-ranging social implications''.
 
 \section{Proposed Approach}
 
@@ -60,9 +59,9 @@ are perfect and we know the driving models of every car. The Oracle
 is a search algorithm without real-time constraints. To define our
 baseline we set a simple rule for decision making: if the smallest
 Time To Collision with respect to other cars is below 10 seconds we
-decelerate by $-2m.s^{-2}$ (as long as we see this collision risk)
-otherwise we accelerate at $1m.s^{-2}$ (as long as we are below the
-speed limit) to reach our target as fast as possible.
+decelerate by $-2\;m.s^{-2}$ (as long as we see this collision risk)
+otherwise we accelerate at $1\quad m.s^{-2}$ (as long as we are below
+the speed limit) to reach our target as fast as possible.
 
 Ultimately we will handle this problem as a MDP search problem as
 we are dealing with uncertainty and we want to investigate how we
@@ -76,13 +75,13 @@ problem.
 \subsection{Model}
 
 The state space is continuous whereas the action space is discrete.
-The model used by our Oracle is the following:
+The model for our Oracle is:
 \begin{itemize}
 \item \textbf{startState}: random initialization with 5 cars on the left
 and 5 cars on the right with trajectories crossing the middle path,
-of the ego vehicle. All the speed are initialized around $20ms^{-1}.$
-The ego vehicle is $200m$ away from its target point: it shall find
-a velocity profile that is efficient (fast), comfortable (limiting
+of the ego vehicle. All the speed are initialized around $20\;ms^{-1}.$
+The ego vehicle is $200\;m$ away from its target point: it shall
+find a velocity profile that is efficient (fast), comfortable (limiting
 strong decelerations and accelerations) and collision free for the
 proposed path.
 \item \textbf{isEnd}: when target is reached by the ego vehicle
@@ -101,10 +100,10 @@ uncertainty later on.
 
 \subsection{Algorithms}
 
-We use Dynamic Programming and Uniform Cost Search algorithms to solve
-the above problem for the Oracle. We use a simple rule, at every time
-step, for the baseline decision making. We will investigate MDP search
-in the next steps.
+We use Dynamic Programming and Uniform Cost Search algorithms for
+the Oracle and a simple rule for the baseline. To deal with sequential
+decision making under uncertainty we will also investigate Reinforcement
+Learning.
 
 \section{Experimental Setup and Status}
 
@@ -112,13 +111,13 @@ The source code is available here: \href{https://github.com/PhilippeW83440/CS221
 \begin{itemize}
 \item Baseline: the decision is fast, immediate, but we find a collision
 free velocity profile only in $35\%$ of the cases.
-\item Oracle: the search is challenging as the state space is big. With
-a time step of $250$ ms, looking for a collision free velocity profile
-over the next $100$ meters we find in $100\%$ of the cases a collision
-free solution; but in $47.2$ seconds with UCS and in $190.7$ seconds
-with DP running on an iCore9. We explored the graph with a depth of
-24. UCS has a complexity of $\mathcal{O}(n\log n)$ with $n=\left|\text{states}\right|$.
-It potentially explores fewer states than DP.
+\item Oracle: the search space is big. With a time step of $250$ ms, looking
+for a collision free velocity profile over the next $100$ meters
+we find in $100\%$ of the cases a collision free solution; but in
+$47.2$ seconds with UCS and in $190.7$ seconds with DP running on
+an iCore9. We explored the graph with a depth of 24. UCS has a complexity
+of $\mathcal{O}(n\log n)$ with $n=\left|\text{states}\right|$. It
+potentially explores fewer states than DP.
 \end{itemize}
 \nocite{*}
 \printbibliography

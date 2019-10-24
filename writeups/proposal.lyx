@@ -140,11 +140,11 @@ status open
 Given a path to follow and information about dynamic obstacles, we have
  to define a velocity profile such that the trajectory is collision free,
  comfortable (without too strong accelerations or decelerations) and efficient
- (as close as possible to the target velocity).
+ (close to the target velocity).
  An autonomous vehicle has to deal with many sources of uncertainties.
  We consider sensor uncertainty and driving model uncertainty which translate
  to dynamics uncertainties.
- On the social impact aspect, as mentionned in 
+ On the social impact aspect, as mentioned in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "article"
@@ -175,11 +175,11 @@ To define our Oracle we consider there is no uncertainty: sensors are perfect
  To define our baseline we set a simple rule for decision making: if the
  smallest Time To Collision with respect to other cars is below 10 seconds
  we decelerate by 
-\begin_inset Formula $-2m.s^{-2}$
+\begin_inset Formula $-2\;m.s^{-2}$
 \end_inset
 
  (as long as we see this collision risk) otherwise we accelerate at 
-\begin_inset Formula $1m.s^{-2}$
+\begin_inset Formula $1\quad m.s^{-2}$
 \end_inset
 
  (as long as we are below the speed limit) to reach our target as fast as
@@ -232,7 +232,7 @@ Model
 
 \begin_layout Standard
 The state space is continuous whereas the action space is discrete.
- The model used by our Oracle is the following:
+ The model for our Oracle is:
 \end_layout
 
 \begin_layout Itemize
@@ -243,11 +243,11 @@ startState
 : random initialization with 5 cars on the left and 5 cars on the right
  with trajectories crossing the middle path, of the ego vehicle.
  All the speed are initialized around 
-\begin_inset Formula $20ms^{-1}.$
+\begin_inset Formula $20\;ms^{-1}.$
 \end_inset
 
  The ego vehicle is 
-\begin_inset Formula $200m$
+\begin_inset Formula $200\;m$
 \end_inset
 
  away from its target point: it shall find a velocity profile that is efficient
@@ -329,10 +329,10 @@ Algorithms
 \end_layout
 
 \begin_layout Standard
-We use Dynamic Programming and Uniform Cost Search algorithms to solve the
- above problem for the Oracle.
- We use a simple rule, at every time step, for the baseline decision making.
- We will investigate MDP search in the next steps.
+We use Dynamic Programming and Uniform Cost Search algorithms for the Oracle
+ and a simple rule for the baseline.
+ To deal with sequential decision making under uncertainty we will also
+ investigate Reinforcement Learning.
 \end_layout
 
 \begin_layout Section
@@ -362,7 +362,7 @@ Baseline: the decision is fast, immediate, but we find a collision free
 \end_layout
 
 \begin_layout Itemize
-Oracle: the search is challenging as the state space is big.
+Oracle: the search space is big.
  With a time step of 
 \begin_inset Formula $250$
 \end_inset
