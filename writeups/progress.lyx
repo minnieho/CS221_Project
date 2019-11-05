@@ -150,6 +150,53 @@ ally large.
 \end_layout
 
 \begin_layout Standard
+More recently, Reinforcement Learning and Deep RL have been investigated
+ in the context of Autonomous Driving for Decision Making either at the
+ Behavioural Planning or Motion Planning level.
+ In some research papers from Volvo 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:journals/corr/abs-1803-10056"
+literal "false"
+
+\end_inset
+
+ and BMW 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "inproceedings"
+literal "false"
+
+\end_inset
+
+ , an RL agent is trained in simulation to take decision at a higher tactical
+ level: the decisions relate to a maneuver selection, like lane change,
+ rather than a low level acceleration command.
+ DQN is used to train an agent.
+ But the problem with Reinforcement Learning is that the utility is optimized
+ in expectation.
+ So even if the reward is designed to avoid collisions, this will be optimized
+ in expectation: ultimately it is as if safety would be enforced with soft
+ constraints rather than hard constraints.
+ Which is of course not acceptable for a real vehicle.
+ To solve this problem in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "inproceedings"
+literal "false"
+
+\end_inset
+
+ an additional safety check layer is added after the DQN agent to eventually
+ override the DQN agent decision if it is considered unsafe.
+ Checking a decision wrt to a specific criteria is simpler than designing
+ a decision making system that jointly optimizes efficiency, comfort and
+ safety objectives.
+ Combining RL with additional safety checks is mandatory for AD.
+ 
+\end_layout
+
+\begin_layout Standard
 ——————————
 \end_layout
 
