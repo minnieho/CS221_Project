@@ -192,8 +192,36 @@ literal "false"
  Checking a decision wrt to a specific criteria is simpler than designing
  a decision making system that jointly optimizes efficiency, comfort and
  safety objectives.
- Combining RL with additional safety checks is mandatory for AD.
- 
+ With RL applied to AD we have to account for additional safety checks.
+ In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:journals/corr/abs-1904-07189"
+literal "false"
+
+\end_inset
+
+ Deep RL is applied at the local planner level: the action space is a set
+ of longitudinal accelerations 
+\begin_inset Formula $\left\{ -4m/s^{2},-2m/s^{2},0m/s^{2},2m/s^{2}\right\} $
+\end_inset
+
+ applied along a given path at a T-intersection.
+ Safety is handled in a different way here compared to previous BMW approach:
+ the agent is constrained to choose among a restricted set of safe actions
+ per state.
+ So the safety is enforce before Deep RL.
+ Ultimately car manufacters may want to combine both types of safety checks:
+ constraining the action set per state before enabling an RL agent to make
+ its own decision, and checking again the final sequence of decisions proposed
+ by the RL agent.
+\end_layout
+
+\begin_layout Standard
+Now the interesting topic is how to best combine traditional Motion Planning
+ with RL.
+ What are the limitations of these techniques in isolation and how to use
+ the strengths of both approaches and circumvent their weaknesses.
 \end_layout
 
 \begin_layout Standard
