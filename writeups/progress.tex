@@ -1,0 +1,211 @@
+%% LyX 2.3.3 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[twocolumn,english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{babel}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage[unicode=true]
+ {hyperref}
+
+\makeatletter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+\usepackage{algorithm,algpseudocode}
+
+\makeatother
+
+\usepackage[style=numeric]{biblatex}
+\addbibresource{project.bib}
+\begin{document}
+\title{Motion Planning for Autonomous Driving}
+\author{Philippe Weingertner, Minnie Ho}
+\maketitle
+
+\section{Introduction}
+
+\section{Related Work}
+
+There is a rich litterature related to Motion Planning and a very
+detailed survey of traditional methods is provided in \cite{7490340}.
+Among the first 4 successful participants of DARPA Urban Challenge
+in 2007, the approaches vary. The winner, CMU Boss vehicle used variational
+techniques for local trajectory generation in a structured environment.
+This was done in a 2 steps path-velocity decomposition. A first step
+of path planning, using variational techniques, is performed and for
+every candidate path, a combination of different velocity profiles
+(constant, linear, linear ramp, trapezoidal) is applied : the combination
+of a path and velocity profile defines a trajectory. In unstructured
+environments (parking lots) or in error recovery situations a lattice
+graph in 4-dimensional configuration space (position, orientation
+and velocity) is searched with Anytime D{*} algorithm to find a collision-free
+path. More details are provided in \cite{Ferguson2009MotionPI,article,5980223}.
+The vehicle from Stanford used a search strategy coined Hybrid A{*}
+that constructs a tree of motion primitives by recursively applying
+a finite set of maneuvers. The search was guided by a carefully designed
+heuristic. The vehicle arriving 3rd, Victor Tango from Virginia Tech,
+constructs a graph discretization of possible maneuvers and searches
+the graph with the A{*} algorithm. The vehicle arriving 4th, developed
+by MIT used a variant of RRT algorithm with biased sampling. While
+all these techniques differ, they fundamentally rely on a graph search
+where nodes correspond to a configuration state and edges correspond
+to elementary motion primitives. Although they provide solutions,
+the runtime and state space can grow exponentially large. In this
+context, the use of heuristic to guide the search is important.
+
+More recently, Reinforcement Learning and Deep RL have been investigated
+in the context of Autonomous Driving for Decision Making either at
+the Behavioural Planning or Motion Planning level. In some research
+papers from Volvo \cite{DBLP:journals/corr/abs-1803-10056} and BMW
+\cite{inproceedings} , an RL agent is trained in simulation to take
+decision at a higher tactical level: the decisions relate to a maneuver
+selection, like lane change, rather than a low level acceleration
+command. DQN is used to train an agent. But the problem with Reinforcement
+Learning is that the utility is optimized in expectation. So even
+if the reward is designed to avoid collisions, this will be optimized
+in expectation: ultimately it is as if safety would be enforced with
+soft constraints rather than hard constraints. Which is of course
+not acceptable for a real vehicle. To solve this problem in \cite{inproceedings}
+an additional safety check layer is added after the DQN agent to eventually
+override the DQN agent decision if it is considered unsafe. Checking
+a decision wrt to a specific criteria is simpler than designing a
+decision making system that jointly optimizes efficiency, comfort
+and safety objectives. With RL applied to AD we have to account for
+additional safety checks. In \cite{DBLP:journals/corr/abs-1904-07189}
+Deep RL is applied at the local planner level: the action space is
+a set of longitudinal accelerations $\left\{ -4m/s^{2},-2m/s^{2},0m/s^{2},2m/s^{2}\right\} $
+applied along a given path at a T-intersection. Safety is handled
+in a different way here compared to previous BMW approach: the agent
+is constrained to choose among a restricted set of safe actions per
+state. So the safety is enforce before Deep RL. Ultimately car manufacters
+may want to combine both types of safety checks: constraining the
+action set per state before enabling an RL agent to make its own decision,
+and checking again the final sequence of decisions proposed by the
+RL agent.
+
+Now the interesting topic is how to best combine traditional Motion
+Planning with RL. What are the limitations of these techniques in
+isolation and how to use the strengths of both approaches and circumvent
+their weaknesses. Traditional motion planning relies heavily on tree
+search and to enable real time solutions good heuristics are required.
+Designing a good heuristic is hard. What if we could learn it ? By
+training an agent with model free RL we can potentially end up with
+an agent that performs pretty well most of the time and from time
+to times fails miserably in a way that is hard to explain. The main
+problems with model free RL are sample efficiency (we need a lot of
+data), enforcing hard constraints and explainability (how can we explain
+the decision taken by a RL agent which may become a problem for a
+car manufacturer). While a model based planning method has the advantages
+of explainability, do not rely on data and can deal in a more systematic
+way with hard constraints. As demonstrated in \cite{DBLP:journals/corr/abs-1904-11483}
+in simple situations RL methods have no benefit over rule based methods,
+pure RL does not enable the agent to act in safer way. But when the
+situation becomes much more complex with an increasing number of cars
+and pedestrians, the benefits of Deep RL methods become clear.
+
+In the gaming domain, chess and go, performances superior to human
+performances have been achieved with AlphaGo Zero \cite{Silver2017MasteringTG}:
+by combining planning with MCTS tree search and learning with RL.
+A neural network biases the sampling towards the most relevant parts
+of the search tree: a learnt policy-value function is used as a heuristic
+during inference. While during training, MCTS is used to improve the
+sample efficiency of RL training. Now there are a few major differences
+between a game like chess or go and our initial Motion Planning problem.
+In chess or go the state space is discrete and fully observable while
+in AD the state space is continuous and partially observable. In terms
+of action sets in both cases, we can deal with discrete action sets.
+But another challenge is that self-play can not be used in the context
+of Motion Planning. These challenges have been recently tackled in
+different publications. The applicability of AlphaGo Zero to Autonomous
+Driving has been studied in \cite{DBLP:journals/corr/abs-1905-02680,DBLP:journals/corr/abs-1905-12197,8814125}.
+
+TODO: 
+\begin{itemize}
+\item analysis of the 3 most relevant papers
+\item highlight what is specific to our use case
+\end{itemize}
+
+\section{Approach}
+
+A few notes + baseline / oracle recap + explain our Custom openai-gym
+env
+
+\subsection{MDP model}
+\begin{itemize}
+\item \textbf{State}: $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(x,y,v_{x},v_{y}\right)_{\text{ego}},\left(x,y,v_{x},v_{y}\right)_{\text{obj}_{1..10}}\right\} $ 
+\begin{itemize}
+\item with $S_{i}^{t}=\left[x,y,v_{x},v_{y}\right]^{T}$ and $i\in\left[0,11\right]$
+\end{itemize}
+\item \textbf{Actions}: $a\in\left[-2\;ms^{-2},-1\;ms^{-2},0\;ms^{-2},1\;ms^{-2},2\;ms^{-2}\right]$
+\begin{itemize}
+\item for ego vehicle we choose an acceleration along y-axis
+\end{itemize}
+\item \textbf{Transitions}: $P\left(S_{i}^{t+1}\mid S_{i}^{t+1}\right)=\mathcal{N}\left(T_{s}S_{i}^{t}+T_{a}\begin{bmatrix}a_{x}\\
+a_{y}
+\end{bmatrix}\right)$ 
+\begin{itemize}
+\item Linear Gaussian dynamics with a Constant Velocity Model
+\item $T_{s}=\begin{bmatrix}1 & 0 & \text{dt} & 0\\
+0 & 1 & 0 & \text{dt}\\
+0 & 0 & 1 & 0\\
+0 & 0 & 0 & 1
+\end{bmatrix},T_{a}=\begin{bmatrix}\frac{\text{dt}^{2}}{2} & 0\\
+0 & \frac{\text{dt}^{2}}{2}\\
+\text{dt} & 0\\
+0 & \text{dt}
+\end{bmatrix}$
+\item $\begin{bmatrix}x^{t+1}\\
+y^{t+1}\\
+v_{x}^{t+1}\\
+v_{y}^{t+1}
+\end{bmatrix}=\begin{bmatrix}x^{t}+v_{x}^{t}\text{dt}\\
+y^{t}+v_{y}^{t}\text{dt}\\
+v_{x}^{t}\\
+v_{y}^{t}
+\end{bmatrix}+\begin{bmatrix}a_{x}\frac{\text{dt}^{2}}{2}\\
+a_{y}\frac{\text{dt}^{2}}{2}\\
+a_{x}\text{dt}\\
+a_{y}\text{dt}
+\end{bmatrix}+\begin{bmatrix}\mathcal{\sigma}_{x}\\
+\sigma_{y}\\
+\sigma_{v_{x}}\\
+\sigma_{v_{y}}
+\end{bmatrix}$
+\end{itemize}
+\item \textbf{Reward}: efficiency + safety + comfort
+\begin{itemize}
+\item $R_{t}=-1-1000\times1\left[\text{d(ego,obj)}\leq10\right]-1\left[\left|a_{t}\right|=2\right]$
+\end{itemize}
+\end{itemize}
+
+\subsection{Algo 1, planning: solving MDP online with MCTS tree search (Model
+Based)}
+
+\subsection{Algo 2, learning: solving MDP with Q-learning and function approximation
+(Model Free)}
+
+\subsection{Algo 3, learning: solving MDP with Deep Q-learning (Model Free)}
+
+\subsection{Combining planning and learning}
+
+\section{Experimental Setup and Status}
+
+The source code is available here: \href{https://github.com/PhilippeW83440/CS221_Project}{CS221 Project}
+\begin{itemize}
+\item Baseline: the decision is fast, immediate, but we find a collision
+free velocity profile only in $35\%$ of the cases.
+\item Oracle: the search space is big. With a time step of $250$ ms, looking
+for a collision free velocity profile over the next $100$ meters
+we find in $100\%$ of the cases a collision free solution; but in
+$47.2$ seconds with UCS and in $190.7$ seconds with DP running on
+an iCore9. We explored the graph with a depth of 24. UCS has a complexity
+of $\mathcal{O}(n\log n)$ with $n=\left|\text{states}\right|$. It
+potentially explores fewer states than DP.
+\item Planning with MCTS tree search
+\item Q-learning
+\item Combining Planning and Learning (with an efficient learned heuristic)
+\end{itemize}
+\nocite{*}
+\printbibliography
+
+\end{document}

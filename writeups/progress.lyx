@@ -311,21 +311,124 @@ MDP model
 \end_layout
 
 \begin_layout Itemize
-State Space:
+
+\series bold
+State
+\series default
+: 
+\begin_inset Formula $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(x,y,v_{x},v_{y}\right)_{\text{ego}},\left(x,y,v_{x},v_{y}\right)_{\text{obj}_{1..10}}\right\} $
+\end_inset
+
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+with 
+\begin_inset Formula $S_{i}^{t}=\left[x,y,v_{x},v_{y}\right]^{T}$
+\end_inset
+
+ and 
+\begin_inset Formula $i\in\left[0,11\right]$
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+Actions
+\series default
+: 
+\begin_inset Formula $a\in\left[-2\;ms^{-2},-1\;ms^{-2},0\;ms^{-2},1\;ms^{-2},2\;ms^{-2}\right]$
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+for ego vehicle we choose an acceleration along y-axis
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+Transitions
+\series default
+: 
+\begin_inset Formula $P\left(S_{i}^{t+1}\mid S_{i}^{t+1}\right)=\mathcal{N}\left(T_{s}S_{i}^{t}+T_{a}\begin{bmatrix}a_{x}\\
+a_{y}
+\end{bmatrix}\right)$
+\end_inset
+
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Linear Gaussian dynamics with a Constant Velocity Model
 \end_layout
 
 \begin_layout Itemize
-Action Space:
+\begin_inset Formula $T_{s}=\begin{bmatrix}1 & 0 & \text{dt} & 0\\
+0 & 1 & 0 & \text{dt}\\
+0 & 0 & 1 & 0\\
+0 & 0 & 0 & 1
+\end{bmatrix},T_{a}=\begin{bmatrix}\frac{\text{dt}^{2}}{2} & 0\\
+0 & \frac{\text{dt}^{2}}{2}\\
+\text{dt} & 0\\
+0 & \text{dt}
+\end{bmatrix}$
+\end_inset
+
+
 \end_layout
 
 \begin_layout Itemize
-Transition Model:
+\begin_inset Formula $\begin{bmatrix}x^{t+1}\\
+y^{t+1}\\
+v_{x}^{t+1}\\
+v_{y}^{t+1}
+\end{bmatrix}=\begin{bmatrix}x^{t}+v_{x}^{t}\text{dt}\\
+y^{t}+v_{y}^{t}\text{dt}\\
+v_{x}^{t}\\
+v_{y}^{t}
+\end{bmatrix}+\begin{bmatrix}a_{x}\frac{\text{dt}^{2}}{2}\\
+a_{y}\frac{\text{dt}^{2}}{2}\\
+a_{x}\text{dt}\\
+a_{y}\text{dt}
+\end{bmatrix}+\begin{bmatrix}\mathcal{\sigma}_{x}\\
+\sigma_{y}\\
+\sigma_{v_{x}}\\
+\sigma_{v_{y}}
+\end{bmatrix}$
+\end_inset
+
+
 \end_layout
 
+\end_deeper
 \begin_layout Itemize
-Reward Model:
+
+\series bold
+Reward
+\series default
+: efficiency + safety + comfort
 \end_layout
 
+\begin_deeper
+\begin_layout Itemize
+\begin_inset Formula $R_{t}=-1-1000\times1\left[\text{d(ego,obj)}\leq10\right]-1\left[\left|a_{t}\right|=2\right]$
+\end_inset
+
+
+\end_layout
+
+\end_deeper
 \begin_layout Subsection
 Algo 1, planning: solving MDP online with MCTS tree search (Model Based)
 \end_layout
