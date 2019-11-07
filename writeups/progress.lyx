@@ -287,11 +287,60 @@ literal "false"
 \end_layout
 
 \begin_layout Standard
-——————————
+TODO: 
+\end_layout
+
+\begin_layout Itemize
+analysis of the 3 most relevant papers
+\end_layout
+
+\begin_layout Itemize
+highlight what is specific to our use case
 \end_layout
 
 \begin_layout Section
 Approach
+\end_layout
+
+\begin_layout Standard
+A few notes + baseline / oracle recap + explain our Custom openai-gym env
+\end_layout
+
+\begin_layout Subsection
+MDP model
+\end_layout
+
+\begin_layout Itemize
+State Space:
+\end_layout
+
+\begin_layout Itemize
+Action Space:
+\end_layout
+
+\begin_layout Itemize
+Transition Model:
+\end_layout
+
+\begin_layout Itemize
+Reward Model:
+\end_layout
+
+\begin_layout Subsection
+Algo 1, planning: solving MDP online with MCTS tree search (Model Based)
+\end_layout
+
+\begin_layout Subsection
+Algo 2, learning: solving MDP with Q-learning and function approximation
+ (Model Free)
+\end_layout
+
+\begin_layout Subsection
+Algo 3, learning: solving MDP with Deep Q-learning (Model Free)
+\end_layout
+
+\begin_layout Subsection
+Combining planning and learning
 \end_layout
 
 \begin_layout Section
