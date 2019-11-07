@@ -3,6 +3,7 @@
 \documentclass[twocolumn,english]{article}
 \usepackage[T1]{fontenc}
 \usepackage[latin9]{inputenc}
+\usepackage{color}
 \usepackage{babel}
 \usepackage{float}
 \usepackage{amsmath}
@@ -51,7 +52,10 @@ all these techniques differ, they fundamentally rely on a graph search
 where nodes correspond to a configuration state and edges correspond
 to elementary motion primitives. Although they provide solutions,
 the runtime and state space can grow exponentially large. In this
-context, the use of heuristic to guide the search is important.
+context, the use of heuristic to guide the search is important. (\textbf{NB:
+uncertainty is not properly considered here in these traditional MP
+methods. It is like reasoning with the mean state vector provided
+by sensor fusion output and ignoring the covariance matrix !})
 
 More recently, Reinforcement Learning and Deep RL have been investigated
 in the context of Autonomous Driving for Decision Making either at
@@ -131,6 +135,9 @@ A few notes + baseline / oracle recap + explain our Custom openai-gym
 env
 
 \subsection{MDP model}
+
+WARNING: use a relative representation of the state (to reduce state
+space ``area'', enable easier generalization/learning etc ...)
 \begin{itemize}
 \item \textbf{State}: $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(x,y,v_{x},v_{y}\right)_{\text{ego}},\left(x,y,v_{x},v_{y}\right)_{\text{obj}_{1..10}}\right\} $ 
 \begin{itemize}
@@ -140,7 +147,7 @@ env
 \begin{itemize}
 \item for ego vehicle we choose an acceleration along y-axis
 \end{itemize}
-\item \textbf{Transitions}: $P\left(S_{i}^{t+1}\mid S_{i}^{t+1}\right)=\mathcal{N}\left(T_{s}S_{i}^{t}+T_{a}\begin{bmatrix}a_{x}\\
+\item \textbf{Transitions}: $T\left(s'\mid s,a\right)=P\left(S_{i}^{t+1}\mid S_{i}^{t},a\right)=\mathcal{N}\left(T_{s}S_{i}^{t}+T_{a}\begin{bmatrix}a_{x}\\
 a_{y}
 \end{bmatrix}\right)$ 
 \begin{itemize}
@@ -178,32 +185,92 @@ a_{y}\text{dt}
 \end{itemize}
 \end{itemize}
 
-\subsection{Algo 1, planning: solving MDP online with MCTS tree search (Model
-Based)}
+\subsection{Algo 1, MCTS tree search}
 
-\subsection{Algo 2, learning: solving MDP with Q-learning and function approximation
-(Model Free)}
+The MDP is solved online via MCTS tree search. This planning method,
+RL Model based, has a complexity that does not grow exponentially
+with the horizon. TODO: our own implementation.
 
-\subsection{Algo 3, learning: solving MDP with Deep Q-learning (Model Free)}
+{\scriptsize{}\begin{algorithmic}[1] 
+\Function{SelectAction}{$s,d$} 
+	\Loop
+		\State \Call {Simulate}{$s,d,\pi_0$}
+	\EndLoop
+	\State \Return arg max$_a\text{ }Q(s,a)$
+\EndFunction
+\end{algorithmic}}{\scriptsize\par}
 
-\subsection{Combining planning and learning}
+{\scriptsize{}\begin{algorithmic}[1] 
+
+\Function{Simulate}{$s,d,\pi_0$} 
+	\If {$d=0$}
+		\State \Return $0$
+	\EndIf
+
+	\If {$s \notin T$} 
+		\For {$a \in A(s)$}
+			\State $(N(s,a),Q(s,a)) \gets (N_0(s,a),Q_0(s,a))$
+		\EndFor
+		\State $T=T \cup \{s\}$
+		\State \Return \Call {Rollout}{$s,d,\pi_0$} 
+	\EndIf
+
+	\State $a \gets \text{arg max}_a\text{ }Q(s,a)+c\sqrt{\frac{logN(s)}{N(s,a)}}$ 
+	\State $(s',r) \sim G(s,a)$
+	\State $q \gets r+\lambda$ \Call {Simulate}{$s,d-1,\pi_0$}
+	\State $N(s,a) \gets N(s,a)+1$
+	\State $Q(s,a) \gets Q(s,a)+ \frac{q-Q(s,a)}{N(s,a)}$
+	\State \Return $q$ 
+\EndFunction
+
+\end{algorithmic}}{\scriptsize\par}
+
+{\scriptsize{}\begin{algorithmic}[1] 
+
+\Function{Rollout}{$s,d,\pi_0$} 
+	\If {$d=0$}
+		\State \Return $0$
+	\EndIf
+	\State $a \sim \pi_0(s)$
+	\State $(s',r) \sim G(s,a)$
+	\State \Return $r+\lambda$ \Call {Rollout}{$s',d-1,\pi_0$}
+\EndFunction
+\end{algorithmic}}{\scriptsize\par}
+
+TODO: add progressive widening to deal with a continuous state space.
+
+\subsection{Algo 2, Approximate Q-learning}
+
+Model Free RL method
+\begin{itemize}
+\item $\hat{Q}_{\text{opt}}(s,a;\mathbf{w})=\mathbf{w}\cdot\phi(s,a)$
+\item $\hat{V}_{\text{opt}}(s')=\underset{a'\in\text{Actions}(s')}{\max}\hat{Q}_{\text{opt}}(s',a')$
+\item \textcolor{black}{$\text{Objective=}\left(\hat{Q}_{\text{opt}}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right)^{2}$}
+\item $\mathbf{w}\leftarrow\mathbf{w}-\eta\left[\hat{Q}_{\text{opt}}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right]\phi(s,a)$ 
+\end{itemize}
+
+\subsection{Algo 3, Deep Q-learning}
+
+Model Free RL method. TODO post progress report.
+
+\subsection{Algo 4, MCTS tree search with a learned heuristic }
+
+Combining Planning and Learning, Model Based and Model Free RL. TODO
+post progress report.
 
 \section{Experimental Setup and Status}
 
 The source code is available here: \href{https://github.com/PhilippeW83440/CS221_Project}{CS221 Project}
 \begin{itemize}
-\item Baseline: the decision is fast, immediate, but we find a collision
-free velocity profile only in $35\%$ of the cases.
-\item Oracle: the search space is big. With a time step of $250$ ms, looking
-for a collision free velocity profile over the next $100$ meters
-we find in $100\%$ of the cases a collision free solution; but in
-$47.2$ seconds with UCS and in $190.7$ seconds with DP running on
-an iCore9. We explored the graph with a depth of 24. UCS has a complexity
-of $\mathcal{O}(n\log n)$ with $n=\left|\text{states}\right|$. It
-potentially explores fewer states than DP.
-\item Planning with MCTS tree search
-\item Q-learning
+\item Baseline: simple rule - reflex based
+\item Oracle: assumes no uncertainty, UCS/A{*} tree search
+\item Sequential Decision Making with Uncertainty => solve a MDP
+\begin{itemize}
+\item \textbf{Planning with MCTS tree search}
+\item \textbf{Approximate Q-learning}
+\item Deep Q-learning
 \item Combining Planning and Learning (with an efficient learned heuristic)
+\end{itemize}
 \end{itemize}
 \nocite{*}
 \printbibliography

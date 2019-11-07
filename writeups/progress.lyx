@@ -147,6 +147,14 @@ literal "false"
  Although they provide solutions, the runtime and state space can grow exponenti
 ally large.
  In this context, the use of heuristic to guide the search is important.
+ (
+\series bold
+NB: uncertainty is not properly considered here in these traditional MP
+ methods.
+ It is like reasoning with the mean state vector provided by sensor fusion
+ output and ignoring the covariance matrix !
+\series default
+)
 \end_layout
 
 \begin_layout Standard
@@ -310,6 +318,19 @@ A few notes + baseline / oracle recap + explain our Custom openai-gym env
 MDP model
 \end_layout
 
+\begin_layout Standard
+WARNING: use a relative representation of the state (to reduce state space
+ 
+\begin_inset Quotes eld
+\end_inset
+
+area
+\begin_inset Quotes erd
+\end_inset
+
+, enable easier generalization/learning etc ...)
+\end_layout
+
 \begin_layout Itemize
 
 \series bold
@@ -360,7 +381,7 @@ for ego vehicle we choose an acceleration along y-axis
 Transitions
 \series default
 : 
-\begin_inset Formula $P\left(S_{i}^{t+1}\mid S_{i}^{t+1}\right)=\mathcal{N}\left(T_{s}S_{i}^{t}+T_{a}\begin{bmatrix}a_{x}\\
+\begin_inset Formula $T\left(s'\mid s,a\right)=P\left(S_{i}^{t+1}\mid S_{i}^{t},a\right)=\mathcal{N}\left(T_{s}S_{i}^{t}+T_{a}\begin{bmatrix}a_{x}\\
 a_{y}
 \end{bmatrix}\right)$
 \end_inset
@@ -430,20 +451,469 @@ Reward
 
 \end_deeper
 \begin_layout Subsection
-Algo 1, planning: solving MDP online with MCTS tree search (Model Based)
+Algo 1, MCTS tree search
+\end_layout
+
+\begin_layout Standard
+The MDP is solved online via MCTS tree search.
+ This planning method, RL Model based, has a complexity that does not grow
+ exponentially with the horizon.
+ TODO: our own implementation.
+\end_layout
+
+\begin_layout Standard
+
+\size scriptsize
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithmic}[1] 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Function{SelectAction}{$s,d$} 
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+Loop
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State 
+\backslash
+Call {Simulate}{$s,d,
+\backslash
+pi_0$}
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+EndLoop
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State 
+\backslash
+Return arg max$_a
+\backslash
+text{ }Q(s,a)$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFunction
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithmic}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\size scriptsize
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithmic}[1] 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Function{Simulate}{$s,d,
+\backslash
+pi_0$} 
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+If {$d=0$}
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State 
+\backslash
+Return $0$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+EndIf
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+If {$s 
+\backslash
+notin T$} 
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+For {$a 
+\backslash
+in A(s)$}
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\backslash
+State $(N(s,a),Q(s,a)) 
+\backslash
+gets (N_0(s,a),Q_0(s,a))$
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+EndFor
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State $T=T 
+\backslash
+cup 
+\backslash
+{s
+\backslash
+}$
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State 
+\backslash
+Return 
+\backslash
+Call {Rollout}{$s,d,
+\backslash
+pi_0$} 
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+EndIf
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $a 
+\backslash
+gets 
+\backslash
+text{arg max}_a
+\backslash
+text{ }Q(s,a)+c
+\backslash
+sqrt{
+\backslash
+frac{logN(s)}{N(s,a)}}$ 
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $(s',r) 
+\backslash
+sim G(s,a)$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $q 
+\backslash
+gets r+
+\backslash
+lambda$ 
+\backslash
+Call {Simulate}{$s,d-1,
+\backslash
+pi_0$}
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $N(s,a) 
+\backslash
+gets N(s,a)+1$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $Q(s,a) 
+\backslash
+gets Q(s,a)+ 
+\backslash
+frac{q-Q(s,a)}{N(s,a)}$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State 
+\backslash
+Return $q$ 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFunction
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithmic}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\size scriptsize
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithmic}[1] 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Function{Rollout}{$s,d,
+\backslash
+pi_0$} 
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+If {$d=0$}
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State 
+\backslash
+Return $0$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+EndIf
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $a 
+\backslash
+sim 
+\backslash
+pi_0(s)$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $(s',r) 
+\backslash
+sim G(s,a)$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State 
+\backslash
+Return $r+
+\backslash
+lambda$ 
+\backslash
+Call {Rollout}{$s',d-1,
+\backslash
+pi_0$}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFunction
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithmic}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+TODO: add progressive widening to deal with a continuous state space.
 \end_layout
 
 \begin_layout Subsection
-Algo 2, learning: solving MDP with Q-learning and function approximation
- (Model Free)
+Algo 2, Approximate Q-learning
+\end_layout
+
+\begin_layout Standard
+Model Free RL method
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $\hat{Q}_{\text{opt}}(s,a;\mathbf{w})=\mathbf{w}\cdot\phi(s,a)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $\hat{V}_{\text{opt}}(s')=\underset{a'\in\text{Actions}(s')}{\max}\hat{Q}_{\text{opt}}(s',a')$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\color black
+\begin_inset Formula $\text{Objective=}\left(\hat{Q}_{\text{opt}}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right)^{2}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $\mathbf{w}\leftarrow\mathbf{w}-\eta\left[\hat{Q}_{\text{opt}}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right]\phi(s,a)$
+\end_inset
+
+ 
 \end_layout
 
 \begin_layout Subsection
-Algo 3, learning: solving MDP with Deep Q-learning (Model Free)
+Algo 3, Deep Q-learning
+\end_layout
+
+\begin_layout Standard
+Model Free RL method.
+ TODO post progress report.
 \end_layout
 
 \begin_layout Subsection
-Combining planning and learning
+Algo 4, MCTS tree search with a learned heuristic 
+\end_layout
+
+\begin_layout Standard
+Combining Planning and Learning, Model Based and Model Free RL.
+ TODO post progress report.
 \end_layout
 
 \begin_layout Section
@@ -464,62 +934,39 @@ literal "false"
 \end_layout
 
 \begin_layout Itemize
-Baseline: the decision is fast, immediate, but we find a collision free
- velocity profile only in 
-\begin_inset Formula $35\%$
-\end_inset
-
- of the cases.
+Baseline: simple rule - reflex based
 \end_layout
 
 \begin_layout Itemize
-Oracle: the search space is big.
- With a time step of 
-\begin_inset Formula $250$
-\end_inset
-
- ms, looking for a collision free velocity profile over the next 
-\begin_inset Formula $100$
-\end_inset
-
- meters we find in 
-\begin_inset Formula $100\%$
-\end_inset
-
- of the cases a collision free solution; but in 
-\begin_inset Formula $47.2$
-\end_inset
-
- seconds with UCS and in 
-\begin_inset Formula $190.7$
-\end_inset
-
- seconds with DP running on an iCore9.
- We explored the graph with a depth of 24.
- UCS has a complexity of 
-\begin_inset Formula $\mathcal{O}(n\log n)$
-\end_inset
-
- with 
-\begin_inset Formula $n=\left|\text{states}\right|$
-\end_inset
-
-.
- It potentially explores fewer states than DP.
+Oracle: assumes no uncertainty, UCS/A* tree search
 \end_layout
 
 \begin_layout Itemize
+Sequential Decision Making with Uncertainty => solve a MDP
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\series bold
 Planning with MCTS tree search
 \end_layout
 
 \begin_layout Itemize
-Q-learning
+
+\series bold
+Approximate Q-learning
+\end_layout
+
+\begin_layout Itemize
+Deep Q-learning
 \end_layout
 
 \begin_layout Itemize
 Combining Planning and Learning (with an efficient learned heuristic)
 \end_layout
 
+\end_deeper
 \begin_layout Standard
 \begin_inset CommandInset bibtex
 LatexCommand bibtex
