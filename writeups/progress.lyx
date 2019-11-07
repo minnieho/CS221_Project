@@ -222,6 +222,68 @@ Now the interesting topic is how to best combine traditional Motion Planning
  with RL.
  What are the limitations of these techniques in isolation and how to use
  the strengths of both approaches and circumvent their weaknesses.
+ Traditional motion planning relies heavily on tree search and to enable
+ real time solutions good heuristics are required.
+ Designing a good heuristic is hard.
+ What if we could learn it ? By training an agent with model free RL we
+ can potentially end up with an agent that performs pretty well most of
+ the time and from time to times fails miserably in a way that is hard to
+ explain.
+ The main problems with model free RL are sample efficiency (we need a lot
+ of data), enforcing hard constraints and explainability (how can we explain
+ the decision taken by a RL agent which may become a problem for a car manufactu
+rer).
+ While a model based planning method has the advantages of explainability,
+ do not rely on data and can deal in a more systematic way with hard constraints.
+ As demonstrated in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:journals/corr/abs-1904-11483"
+literal "false"
+
+\end_inset
+
+ in simple situations RL methods have no benefit over rule based methods,
+ pure RL does not enable the agent to act in safer way.
+ But when the situation becomes much more complex with an increasing number
+ of cars and pedestrians, the benefits of Deep RL methods become clear.
+\end_layout
+
+\begin_layout Standard
+In the gaming domain, chess and go, performances superior to human performances
+ have been achieved with AlphaGo Zero 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Silver2017MasteringTG"
+literal "false"
+
+\end_inset
+
+: by combining planning with MCTS tree search and learning with RL.
+ A neural network biases the sampling towards the most relevant parts of
+ the search tree: a learnt policy-value function is used as a heuristic
+ during inference.
+ While during training, MCTS is used to improve the sample efficiency of
+ RL training.
+ Now there are a few major differences between a game like chess or go and
+ our initial Motion Planning problem.
+ In chess or go the state space is discrete and fully observable while in
+ AD the state space is continuous and partially observable.
+ In terms of action sets in both cases, we can deal with discrete action
+ sets.
+ But another challenge is that self-play can not be used in the context
+ of Motion Planning.
+ These challenges have been recently tackled in different publications.
+ The applicability of AlphaGo Zero to Autonomous Driving has been studied
+ in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:journals/corr/abs-1905-02680,DBLP:journals/corr/abs-1905-12197,8814125"
+literal "false"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
