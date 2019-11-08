@@ -7,6 +7,7 @@
 \usepackage{babel}
 \usepackage{float}
 \usepackage{amsmath}
+\usepackage{graphicx}
 \usepackage[unicode=true]
  {hyperref}
 
@@ -136,13 +137,21 @@ env
 
 \subsection{MDP model}
 
-WARNING: use a relative representation of the state (to reduce state
+TODO: use a relative representation of the state (to reduce state
 space ``area'', enable easier generalization/learning etc ...)
 \begin{itemize}
 \item \textbf{State}: $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(x,y,v_{x},v_{y}\right)_{\text{ego}},\left(x,y,v_{x},v_{y}\right)_{\text{obj}_{1..10}}\right\} $ 
 \begin{itemize}
 \item with $S_{i}^{t}=\left[x,y,v_{x},v_{y}\right]^{T}$ and $i\in\left[0,11\right]$
 \end{itemize}
+\end{itemize}
+We use a relative and normalized $\in\left[-1,1\right]$ representation
+of the state and account for the fact that the ego car drives along
+the y-axis only (in a further simplified first version we could even
+assume that the 10 other cars drive only along the x-axis, crossing
+orthogonally to the ego car path):
+\begin{itemize}
+\item \textbf{State}: $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(\frac{y}{y^{max}},\frac{v_{y}}{v_{y}^{max}}\right)_{\text{ego}},\left(\frac{\Delta x}{\Delta x^{max}},\frac{\Delta y}{\Delta y^{max}},\frac{\Delta v_{x}}{\Delta v_{x}^{max}},\frac{\Delta v_{y}}{\Delta v_{y}^{max}}\right)_{\text{obj}_{1..10}}\right\} $
 \item \textbf{Actions}: $a\in\left[-2\;ms^{-2},-1\;ms^{-2},0\;ms^{-2},1\;ms^{-2},2\;ms^{-2}\right]$
 \begin{itemize}
 \item for ego vehicle we choose an acceleration along y-axis
@@ -187,9 +196,12 @@ a_{y}\text{dt}
 
 \subsection{Algo 1, MCTS tree search}
 
-The MDP is solved online via MCTS tree search. This planning method,
-RL Model based, has a complexity that does not grow exponentially
-with the horizon. TODO: our own implementation.
+The MDP is solved online via MCTS tree search. Solving it offline
+with Value Iteration is not an option as we are dealing with a huge
+state space (it is actually a continuous state space and if we want
+to discretize it it will be huge anyways). This planning method, RL
+Model based, has a complexity that does not grow exponentially with
+the horizon. 
 
 {\scriptsize{}\begin{algorithmic}[1] 
 \Function{SelectAction}{$s,d$} 
@@ -240,36 +252,82 @@ with the horizon. TODO: our own implementation.
 TODO: add progressive widening to deal with a continuous state space.
 
 \subsection{Algo 2, Approximate Q-learning}
-
-Model Free RL method
+\begin{itemize}
+\item Model Free RL algorithm:
 \begin{itemize}
 \item $\hat{Q}_{\text{opt}}(s,a;\mathbf{w})=\mathbf{w}\cdot\phi(s,a)$
 \item $\hat{V}_{\text{opt}}(s')=\underset{a'\in\text{Actions}(s')}{\max}\hat{Q}_{\text{opt}}(s',a')$
 \item \textcolor{black}{$\text{Objective=}\left(\hat{Q}_{\text{opt}}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right)^{2}$}
 \item $\mathbf{w}\leftarrow\mathbf{w}-\eta\left[\hat{Q}_{\text{opt}}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right]\phi(s,a)$ 
 \end{itemize}
+\item Features Extractor 1: $\phi(s,a)=\begin{bmatrix}s_{42\times1}\\
+a_{1\times1}\\
+s_{42\times1}^{2}\\
+a_{1\times1}^{2}
+\end{bmatrix}$ 
+
+The state vector has 42 components (10 cars with 4 components each
+and 2 components for the ego car), action is a single number. We use
+quadratic components as well: as it is expected that the value of
+a $(s,a)$ tuple will depend on distances computations. Typically
+when computing Time To Collision, quadratic terms appear so we want
+to provide these relevant features and figure out by learning the
+weights associated to these features.
+\item Features Extractor 2: $\phi(s,a)=\begin{bmatrix}s_{6\times1}\\
+a_{1\times1}\\
+s_{6\times1}^{2}\\
+a_{1\times1}^{2}
+\end{bmatrix}$ we just take into account ego car + closest car to work with a minimum
+number of features. It may be easier to work with; to speed up learning.
+\end{itemize}
 
 \subsection{Algo 3, Deep Q-learning}
 
-Model Free RL method. TODO post progress report.
+Model Free RL method. Our Neural Network has 42 neurons as input,
+corresponding to the state vector, and 5 neurons as output. We will
+use a Neural Network architecture slightly adapted from \cite{DBLP:journals/corr/abs-1803-10056}.
+It is based on a CNN network as we want to have translational invariance
+of the input. It should not matter to provide information about different
+cars in one order or the other.
+\begin{center}
+\includegraphics[scale=0.3]{img/CNN_for_DQN}
+\par\end{center}
 
 \subsection{Algo 4, MCTS tree search with a learned heuristic }
 
 Combining Planning and Learning, Model Based and Model Free RL. TODO
 post progress report.
 
+We want to use our learned Q-network $\hat{Q}(s,a;\mathbf{w})$ via
+approximate Q-learning or Deep Q-learning as a heuristic for MCTS
+tree search: to expand the tree in the most promising areas and hence
+come up faster with a good solution. A solution is considered good
+as soon as it is estimated collision free; we may run further MCTS
+tree search up to some time limit, to find even better solutions:
+faster or more comfortable. The reward takes into account safety,
+comfort and efficiency. While there is a big penalty for collisions
+of $-1000,$ at every time step we penalize the reward by $-1$ to
+enforce efficiency and penalize every strong acceleration or deceleration,
+when $\left|a\right|=2\quad ms^{-2}$, by -2 to encourage more comfortable
+trajectories.
+
 \section{Experimental Setup and Status}
 
 The source code is available here: \href{https://github.com/PhilippeW83440/CS221_Project}{CS221 Project}
 \begin{itemize}
-\item Baseline: simple rule - reflex based
-\item Oracle: assumes no uncertainty, UCS/A{*} tree search
+\item Baseline: simple rule - reflex based. DONE
+\item Oracle: assumes no uncertainty, UCS/A{*} tree search. DONE
 \item Sequential Decision Making with Uncertainty => solve a MDP
 \begin{itemize}
-\item \textbf{Planning with MCTS tree search}
-\item \textbf{Approximate Q-learning}
-\item Deep Q-learning
-\item Combining Planning and Learning (with an efficient learned heuristic)
+\item Planning with MCTS tree search. ON-GOING: MDP model implementation
++ our own MCTS algo implementation
+\item Approximate Q-learning: leverage on CS221 hw4 blackjack setup + custom
+Features Extractor + interface with our MDP model
+\item Deep Q-learning: basically the pytorch DQN setup from \href{https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html}{pytorch.org}
+customized with our proposed CNN network and interfaced with our own
+gymai environment (gymai-act for Anti Collision Tests)
+\item Combining Planning and Learning: we should have MCTS and Q-learning
+working independently first ..
 \end{itemize}
 \end{itemize}
 \nocite{*}

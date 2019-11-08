@@ -319,7 +319,7 @@ MDP model
 \end_layout
 
 \begin_layout Standard
-WARNING: use a relative representation of the state (to reduce state space
+TODO: use a relative representation of the state (to reduce state space
  
 \begin_inset Quotes eld
 \end_inset
@@ -357,6 +357,29 @@ with
 \end_layout
 
 \end_deeper
+\begin_layout Standard
+We use a relative and normalized 
+\begin_inset Formula $\in\left[-1,1\right]$
+\end_inset
+
+ representation of the state and account for the fact that the ego car drives
+ along the y-axis only (in a further simplified first version we could even
+ assume that the 10 other cars drive only along the x-axis, crossing orthogonall
+y to the ego car path):
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+State
+\series default
+: 
+\begin_inset Formula $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(\frac{y}{y^{max}},\frac{v_{y}}{v_{y}^{max}}\right)_{\text{ego}},\left(\frac{\Delta x}{\Delta x^{max}},\frac{\Delta y}{\Delta y^{max}},\frac{\Delta v_{x}}{\Delta v_{x}^{max}},\frac{\Delta v_{y}}{\Delta v_{y}^{max}}\right)_{\text{obj}_{1..10}}\right\} $
+\end_inset
+
+
+\end_layout
+
 \begin_layout Itemize
 
 \series bold
@@ -456,9 +479,12 @@ Algo 1, MCTS tree search
 
 \begin_layout Standard
 The MDP is solved online via MCTS tree search.
+ Solving it offline with Value Iteration is not an option as we are dealing
+ with a huge state space (it is actually a continuous state space and if
+ we want to discretize it it will be huge anyways).
  This planning method, RL Model based, has a complexity that does not grow
  exponentially with the horizon.
- TODO: our own implementation.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -864,10 +890,11 @@ TODO: add progressive widening to deal with a continuous state space.
 Algo 2, Approximate Q-learning
 \end_layout
 
-\begin_layout Standard
-Model Free RL method
+\begin_layout Itemize
+Model Free RL algorithm:
 \end_layout
 
+\begin_deeper
 \begin_layout Itemize
 \begin_inset Formula $\hat{Q}_{\text{opt}}(s,a;\mathbf{w})=\mathbf{w}\cdot\phi(s,a)$
 \end_inset
@@ -898,13 +925,82 @@ Model Free RL method
  
 \end_layout
 
+\end_deeper
+\begin_layout Itemize
+Features Extractor 1: 
+\begin_inset Formula $\phi(s,a)=\begin{bmatrix}s_{42\times1}\\
+a_{1\times1}\\
+s_{42\times1}^{2}\\
+a_{1\times1}^{2}
+\end{bmatrix}$
+\end_inset
+
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The state vector has 42 components (10 cars with 4 components each and 2
+ components for the ego car), action is a single number.
+ We use quadratic components as well: as it is expected that the value of
+ a 
+\begin_inset Formula $(s,a)$
+\end_inset
+
+ tuple will depend on distances computations.
+ Typically when computing Time To Collision, quadratic terms appear so we
+ want to provide these relevant features and figure out by learning the
+ weights associated to these features.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Features Extractor 2: 
+\begin_inset Formula $\phi(s,a)=\begin{bmatrix}s_{6\times1}\\
+a_{1\times1}\\
+s_{6\times1}^{2}\\
+a_{1\times1}^{2}
+\end{bmatrix}$
+\end_inset
+
+ we just take into account ego car + closest car to work with a minimum
+ number of features.
+ It may be easier to work with; to speed up learning.
+\end_layout
+
 \begin_layout Subsection
 Algo 3, Deep Q-learning
 \end_layout
 
 \begin_layout Standard
 Model Free RL method.
- TODO post progress report.
+ Our Neural Network has 42 neurons as input, corresponding to the state
+ vector, and 5 neurons as output.
+ We will use a Neural Network architecture slightly adapted from 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:journals/corr/abs-1803-10056"
+literal "false"
+
+\end_inset
+
+.
+ It is based on a CNN network as we want to have translational invariance
+ of the input.
+ It should not matter to provide information about different cars in one
+ order or the other.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename img/CNN_for_DQN.png
+	lyxscale 30
+	scale 30
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -914,6 +1010,34 @@ Algo 4, MCTS tree search with a learned heuristic
 \begin_layout Standard
 Combining Planning and Learning, Model Based and Model Free RL.
  TODO post progress report.
+\end_layout
+
+\begin_layout Standard
+We want to use our learned Q-network 
+\begin_inset Formula $\hat{Q}(s,a;\mathbf{w})$
+\end_inset
+
+ via approximate Q-learning or Deep Q-learning as a heuristic for MCTS tree
+ search: to expand the tree in the most promising areas and hence come up
+ faster with a good solution.
+ A solution is considered good as soon as it is estimated collision free;
+ we may run further MCTS tree search up to some time limit, to find even
+ better solutions: faster or more comfortable.
+ The reward takes into account safety, comfort and efficiency.
+ While there is a big penalty for collisions of 
+\begin_inset Formula $-1000,$
+\end_inset
+
+ at every time step we penalize the reward by 
+\begin_inset Formula $-1$
+\end_inset
+
+ to enforce efficiency and penalize every strong acceleration or deceleration,
+ when 
+\begin_inset Formula $\left|a\right|=2\quad ms^{-2}$
+\end_inset
+
+, by -2 to encourage more comfortable trajectories.
 \end_layout
 
 \begin_layout Section
@@ -934,11 +1058,13 @@ literal "false"
 \end_layout
 
 \begin_layout Itemize
-Baseline: simple rule - reflex based
+Baseline: simple rule - reflex based.
+ DONE
 \end_layout
 
 \begin_layout Itemize
-Oracle: assumes no uncertainty, UCS/A* tree search
+Oracle: assumes no uncertainty, UCS/A* tree search.
+ DONE
 \end_layout
 
 \begin_layout Itemize
@@ -947,23 +1073,32 @@ Sequential Decision Making with Uncertainty => solve a MDP
 
 \begin_deeper
 \begin_layout Itemize
-
-\series bold
-Planning with MCTS tree search
+Planning with MCTS tree search.
+ ON-GOING: MDP model implementation + our own MCTS algo implementation
 \end_layout
 
 \begin_layout Itemize
-
-\series bold
-Approximate Q-learning
+Approximate Q-learning: leverage on CS221 hw4 blackjack setup + custom Features
+ Extractor + interface with our MDP model
 \end_layout
 
 \begin_layout Itemize
-Deep Q-learning
+Deep Q-learning: basically the pytorch DQN setup from 
+\begin_inset CommandInset href
+LatexCommand href
+name "pytorch.org"
+target "https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html"
+literal "false"
+
+\end_inset
+
+ customized with our proposed CNN network and interfaced with our own gymai
+ environment (gymai-act for Anti Collision Tests)
 \end_layout
 
 \begin_layout Itemize
-Combining Planning and Learning (with an efficient learned heuristic)
+Combining Planning and Learning: we should have MCTS and Q-learning working
+ independently first ..
 \end_layout
 
 \end_deeper
