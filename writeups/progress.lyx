@@ -307,28 +307,80 @@ highlight what is specific to our use case
 \end_layout
 
 \begin_layout Section
-Approach
+Test Setup
 \end_layout
 
 \begin_layout Standard
-A few notes + baseline / oracle recap + explain our Custom openai-gym env
+The problem statement is as follows.
+ Given an ego vehicle (E) with a given path of 
+\begin_inset Formula $(x,y)$
+\end_inset
+
+ coordinates, find a set of acceleration decisions 
+\begin_inset Formula $(a_{x},a_{y})$
+\end_inset
+
+ at discrete time steps to enable E to avoid a set of intersecting vehicles
+ 
+\begin_inset Formula $\left\{ V\right\} .$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename img/ActV0.png
+	lyxscale 30
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The ego car in blue has to avoid 10 intersecting vehicles to reach a goal
+ point.
+ The position and speed of intersecting vehicles is not known precisely:
+ the ground truth is represented via dots while the position reported by
+ the sensors is represented by crosses.
+ A Time To Collision based on ground truth information is displayed and
+ if there exist an intersecting car with a predicted TTC below 10 seconds
+ it is displayed in red.
+ This test framework is a custom one we have developped.
+ We have a version of this test framework that is compatible with open ai
+ gym interfaces: so that any standard Deep RL setup, can be directly used
+ with this environment.
+ Typically we intend to use a DQN setup from 
+\begin_inset CommandInset href
+LatexCommand href
+name "pytorch.org"
+target "https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html"
+literal "false"
+
+\end_inset
+
+ initially tested on cartpole-v1 with our own Act-v1 environment.
+ Our simulation and test environment can be downloaded and installed from
+ 
+\begin_inset CommandInset href
+LatexCommand href
+name "gym-act"
+target "https://github.com/PhilippeW83440/CS221_Project/tree/master/gym-act"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+Approach
 \end_layout
 
 \begin_layout Subsection
 MDP model
-\end_layout
-
-\begin_layout Standard
-TODO: use a relative representation of the state (to reduce state space
- 
-\begin_inset Quotes eld
-\end_inset
-
-area
-\begin_inset Quotes erd
-\end_inset
-
-, enable easier generalization/learning etc ...)
 \end_layout
 
 \begin_layout Itemize
@@ -336,7 +388,7 @@ area
 \series bold
 State
 \series default
-: 
+ (absolute coordinates): 
 \begin_inset Formula $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(x,y,v_{x},v_{y}\right)_{\text{ego}},\left(x,y,v_{x},v_{y}\right)_{\text{obj}_{1..10}}\right\} $
 \end_inset
 
@@ -373,7 +425,7 @@ y to the ego car path):
 \series bold
 State
 \series default
-: 
+ (relative coordinates): 
 \begin_inset Formula $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(\frac{y}{y^{max}},\frac{v_{y}}{v_{y}^{max}}\right)_{\text{ego}},\left(\frac{\Delta x}{\Delta x^{max}},\frac{\Delta y}{\Delta y^{max}},\frac{\Delta v_{x}}{\Delta v_{x}^{max}},\frac{\Delta v_{y}}{\Delta v_{y}^{max}}\right)_{\text{obj}_{1..10}}\right\} $
 \end_inset
 
@@ -1021,7 +1073,7 @@ We want to use our learned Q-network
  search: to expand the tree in the most promising areas and hence come up
  faster with a good solution.
  A solution is considered good as soon as it is estimated collision free;
- we may run further MCTS tree search up to some time limit, to find even
+ we may run further MCTS tree searches up to some time limit, to find even
  better solutions: faster or more comfortable.
  The reward takes into account safety, comfort and efficiency.
  While there is a big penalty for collisions of 

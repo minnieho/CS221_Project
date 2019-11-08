@@ -130,17 +130,35 @@ TODO:
 \item highlight what is specific to our use case
 \end{itemize}
 
+\section{Test Setup}
+
+The problem statement is as follows. Given an ego vehicle (E) with
+a given path of $(x,y)$ coordinates, find a set of acceleration decisions
+$(a_{x},a_{y})$ at discrete time steps to enable E to avoid a set
+of intersecting vehicles $\left\{ V\right\} .$
+
+\includegraphics[scale=0.3]{img/ActV0}
+
+The ego car in blue has to avoid 10 intersecting vehicles to reach
+a goal point. The position and speed of intersecting vehicles is not
+known precisely: the ground truth is represented via dots while the
+position reported by the sensors is represented by crosses. A Time
+To Collision based on ground truth information is displayed and if
+there exist an intersecting car with a predicted TTC below 10 seconds
+it is displayed in red. This test framework is a custom one we have
+developped. We have a version of this test framework that is compatible
+with open ai gym interfaces: so that any standard Deep RL setup, can
+be directly used with this environment. Typically we intend to use
+a DQN setup from \href{https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html}{pytorch.org}
+initially tested on cartpole-v1 with our own Act-v1 environment. Our
+simulation and test environment can be downloaded and installed from
+\href{https://github.com/PhilippeW83440/CS221_Project/tree/master/gym-act}{gym-act}.
+
 \section{Approach}
 
-A few notes + baseline / oracle recap + explain our Custom openai-gym
-env
-
 \subsection{MDP model}
-
-TODO: use a relative representation of the state (to reduce state
-space ``area'', enable easier generalization/learning etc ...)
 \begin{itemize}
-\item \textbf{State}: $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(x,y,v_{x},v_{y}\right)_{\text{ego}},\left(x,y,v_{x},v_{y}\right)_{\text{obj}_{1..10}}\right\} $ 
+\item \textbf{State} (absolute coordinates): $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(x,y,v_{x},v_{y}\right)_{\text{ego}},\left(x,y,v_{x},v_{y}\right)_{\text{obj}_{1..10}}\right\} $ 
 \begin{itemize}
 \item with $S_{i}^{t}=\left[x,y,v_{x},v_{y}\right]^{T}$ and $i\in\left[0,11\right]$
 \end{itemize}
@@ -151,7 +169,7 @@ the y-axis only (in a further simplified first version we could even
 assume that the 10 other cars drive only along the x-axis, crossing
 orthogonally to the ego car path):
 \begin{itemize}
-\item \textbf{State}: $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(\frac{y}{y^{max}},\frac{v_{y}}{v_{y}^{max}}\right)_{\text{ego}},\left(\frac{\Delta x}{\Delta x^{max}},\frac{\Delta y}{\Delta y^{max}},\frac{\Delta v_{x}}{\Delta v_{x}^{max}},\frac{\Delta v_{y}}{\Delta v_{y}^{max}}\right)_{\text{obj}_{1..10}}\right\} $
+\item \textbf{State} (relative coordinates): $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(\frac{y}{y^{max}},\frac{v_{y}}{v_{y}^{max}}\right)_{\text{ego}},\left(\frac{\Delta x}{\Delta x^{max}},\frac{\Delta y}{\Delta y^{max}},\frac{\Delta v_{x}}{\Delta v_{x}^{max}},\frac{\Delta v_{y}}{\Delta v_{y}^{max}}\right)_{\text{obj}_{1..10}}\right\} $
 \item \textbf{Actions}: $a\in\left[-2\;ms^{-2},-1\;ms^{-2},0\;ms^{-2},1\;ms^{-2},2\;ms^{-2}\right]$
 \begin{itemize}
 \item for ego vehicle we choose an acceleration along y-axis
@@ -303,7 +321,7 @@ approximate Q-learning or Deep Q-learning as a heuristic for MCTS
 tree search: to expand the tree in the most promising areas and hence
 come up faster with a good solution. A solution is considered good
 as soon as it is estimated collision free; we may run further MCTS
-tree search up to some time limit, to find even better solutions:
+tree searches up to some time limit, to find even better solutions:
 faster or more comfortable. The reward takes into account safety,
 comfort and efficiency. While there is a big penalty for collisions
 of $-1000,$ at every time step we penalize the reward by $-1$ to
