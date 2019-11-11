@@ -244,12 +244,37 @@ a_{y}\text{dt}
 
 \subsection{Algo 1, MCTS tree search}
 
-The MDP is solved online via MCTS tree search. Solving it offline
+The MDP is solved online with MCTS tree search. Solving it offline
 with Value Iteration is not an option as we are dealing with a huge
-state space (it is actually a continuous state space and if we want
-to discretize it it will be huge anyways). This planning method, RL
-Model based, has a complexity that does not grow exponentially with
-the horizon. 
+state space. MCTS is one of the most successfull sampling-based online
+approaches used in recent years. It is the core part of AlphaGo Zero
+\cite{DBLP:journals/corr/abs-1712-01815}. A description of the algorithm
+is provided in \cite{Kochenderfer2015}. This algorithm involves running
+many simulations from the current state while updating an estimate
+of the state-action value function $Q(s,a)$ along its path of exploration.
+Online algorithms enable to reduce the search space to the portion
+of the state space that is reachable from a current state. MCTS has
+the possibility to balance exploration and exploitation typically
+via a method called Upper Confidence Bound: during the search we execute
+the action that maximizes $Q(s,a)+c\sqrt{\frac{\log N(s)}{N(s,a)}}$
+where $N(s),N(s,a)$ track the number of times a state and state-action
+pair are visited . $c$ is a parameter that controls the amount of
+exploration in the search: it will encourage exploring less visited
+$(s,a)$ pairs and rely on the learned policy via $Q(s,a)$ estimates
+for pairs that are well expolored, to choose an action from. Once
+we reach a state that is not part of the explored set, we iterate
+over all possible actions from that state and expand the tree. After
+the expansion stage, a rollout is performed: the rollout consists
+in running many random simulations till we reach some depth. It is
+a Monte Carlo estimate of a state so the rollout policy are typically
+stochastic and do not have to be close to optimal. The rollout policy
+is different than the policy used for exploitation/exploration presented
+above. Simulations, running from the root of the tree down to a leaf
+node expansion, followed by a rollout evaluation phase, are run until
+some stopping criterion is met: a time limit or a maximum number of
+iterations. We then execute the action that maximizes $Q(s,a)$ at
+the root of the tree. The pseudo code of the algorithm is provided
+below:
 
 {\scriptsize{}\begin{algorithmic}[1] 
 \Function{SelectAction}{$s,d$} 
@@ -297,7 +322,14 @@ the horizon.
 \EndFunction
 \end{algorithmic}}{\scriptsize\par}
 
-TODO: add progressive widening to deal with a continuous state space.
+One remaining problem is that in chess or go, state space is discrete
+and the above algorithm does not cope with continuous state space:
+the same state may never be sampled more than once from the generative
+model which will result in a shallow tree with just one layer. The
+Progressive Widening variant of MCTS \cite{DBLP:journals/corr/abs-1709-06196,Couetoux:2011:CUC:2177360.2177393}
+solves this problem by controlling the sampling of new states and
+the sampling among already existing states to enable exploration in
+depth and not just in breadth. 
 
 \subsection{Algo 2, Approximate Q-learning}
 \begin{itemize}

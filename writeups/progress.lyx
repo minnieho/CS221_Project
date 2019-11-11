@@ -295,10 +295,6 @@ literal "false"
 \end_layout
 
 \begin_layout Standard
-
-\end_layout
-
-\begin_layout Standard
 In 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -596,13 +592,79 @@ Algo 1, MCTS tree search
 \end_layout
 
 \begin_layout Standard
-The MDP is solved online via MCTS tree search.
+The MDP is solved online with MCTS tree search.
  Solving it offline with Value Iteration is not an option as we are dealing
- with a huge state space (it is actually a continuous state space and if
- we want to discretize it it will be huge anyways).
- This planning method, RL Model based, has a complexity that does not grow
- exponentially with the horizon.
+ with a huge state space.
+ MCTS is one of the most successfull sampling-based online approaches used
+ in recent years.
+ It is the core part of AlphaGo Zero 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:journals/corr/abs-1712-01815"
+literal "false"
+
+\end_inset
+
+.
+ A description of the algorithm is provided in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Kochenderfer2015"
+literal "false"
+
+\end_inset
+
+.
+ This algorithm involves running many simulations from the current state
+ while updating an estimate of the state-action value function 
+\begin_inset Formula $Q(s,a)$
+\end_inset
+
+ along its path of exploration.
+ Online algorithms enable to reduce the search space to the portion of the
+ state space that is reachable from a current state.
+ MCTS has the possibility to balance exploration and exploitation typically
+ via a method called Upper Confidence Bound: during the search we execute
+ the action that maximizes 
+\begin_inset Formula $Q(s,a)+c\sqrt{\frac{\log N(s)}{N(s,a)}}$
+\end_inset
+
+ where 
+\begin_inset Formula $N(s),N(s,a)$
+\end_inset
+
+ track the number of times a state and state-action pair are visited .
  
+\begin_inset Formula $c$
+\end_inset
+
+ is a parameter that controls the amount of exploration in the search: it
+ will encourage exploring less visited 
+\begin_inset Formula $(s,a)$
+\end_inset
+
+ pairs and rely on the learned policy via 
+\begin_inset Formula $Q(s,a)$
+\end_inset
+
+ estimates for pairs that are well expolored, to choose an action from.
+ Once we reach a state that is not part of the explored set, we iterate
+ over all possible actions from that state and expand the tree.
+ After the expansion stage, a rollout is performed: the rollout consists
+ in running many random simulations till we reach some depth.
+ It is a Monte Carlo estimate of a state so the rollout policy are typically
+ stochastic and do not have to be close to optimal.
+ The rollout policy is different than the policy used for exploitation/explorati
+on presented above.
+ Simulations, running from the root of the tree down to a leaf node expansion,
+ followed by a rollout evaluation phase, are run until some stopping criterion
+ is met: a time limit or a maximum number of iterations.
+ We then execute the action that maximizes 
+\begin_inset Formula $Q(s,a)$
+\end_inset
+
+ at the root of the tree.
+ The pseudo code of the algorithm is provided below:
 \end_layout
 
 \begin_layout Standard
@@ -1001,7 +1063,22 @@ end{algorithmic}
 \end_layout
 
 \begin_layout Standard
-TODO: add progressive widening to deal with a continuous state space.
+One remaining problem is that in chess or go, state space is discrete and
+ the above algorithm does not cope with continuous state space: the same
+ state may never be sampled more than once from the generative model which
+ will result in a shallow tree with just one layer.
+ The Progressive Widening variant of MCTS 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "DBLP:journals/corr/abs-1709-06196,Couetoux:2011:CUC:2177360.2177393"
+literal "false"
+
+\end_inset
+
+ solves this problem by controlling the sampling of new states and the sampling
+ among already existing states to enable exploration in depth and not just
+ in breadth.
+ 
 \end_layout
 
 \begin_layout Subsection
