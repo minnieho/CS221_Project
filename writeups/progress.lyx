@@ -445,79 +445,69 @@ Approach
 MDP model
 \end_layout
 
+\begin_layout Standard
+A representation of the states in absolute coordinates would be 
+\begin_inset Formula $S_{t}=\left\{ \left(x,y,v_{x},v_{y}\right)_{\text{ego}},\left(x,y,v_{x},v_{y}\right)_{\text{obj}_{1..10}}\right\} $
+\end_inset
+
+.
+ But we use a relative and normalized 
+\begin_inset Formula $\in\left[-1,1\right]$
+\end_inset
+
+ representation of the state (for easier generalization and learning) and
+ account for the fact that the ego car drives along the y-axis only
+\series bold
+.
+ 
+\end_layout
+
 \begin_layout Itemize
 
 \series bold
-State
+States:
 \series default
- (absolute coordinates): 
-\begin_inset Formula $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(x,y,v_{x},v_{y}\right)_{\text{ego}},\left(x,y,v_{x},v_{y}\right)_{\text{obj}_{1..10}}\right\} $
+ 
+\begin_inset Formula $S=\left\{ \left(\frac{y}{y^{max}},\frac{v_{y}}{v_{y}^{max}}\right)_{\text{ego}},\left(\frac{\Delta x}{\Delta x^{max}},\frac{\Delta y}{\Delta y^{max}},\frac{\Delta v_{x}}{\Delta v_{x}^{max}},\frac{\Delta v_{y}}{\Delta v_{y}^{max}}\right)_{\text{obj}_{1..10}}\right\} $
+\end_inset
+
+ ie a vector 
+\begin_inset Formula $\in\mathbb{R}^{42}$
 \end_inset
 
  
 \end_layout
 
-\begin_deeper
-\begin_layout Itemize
-with 
-\begin_inset Formula $S_{i}^{t}=\left[x,y,v_{x},v_{y}\right]^{T}$
-\end_inset
-
- and 
-\begin_inset Formula $i\in\left[0,11\right]$
-\end_inset
-
-
-\end_layout
-
-\end_deeper
 \begin_layout Standard
-We use a relative and normalized 
-\begin_inset Formula $\in\left[-1,1\right]$
-\end_inset
-
- representation of the state and account for the fact that the ego car drives
- along the y-axis only (in a further simplified first version we could even
- assume that the 10 other cars drive only along the x-axis, crossing orthogonall
-y to the ego car path):
+While the state space is continuous we use a discrete action space.
+ 
 \end_layout
 
 \begin_layout Itemize
 
 \series bold
-State
+Actions:
 \series default
- (relative coordinates): 
-\begin_inset Formula $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(\frac{y}{y^{max}},\frac{v_{y}}{v_{y}^{max}}\right)_{\text{ego}},\left(\frac{\Delta x}{\Delta x^{max}},\frac{\Delta y}{\Delta y^{max}},\frac{\Delta v_{x}}{\Delta v_{x}^{max}},\frac{\Delta v_{y}}{\Delta v_{y}^{max}}\right)_{\text{obj}_{1..10}}\right\} $
+ 
+\begin_inset Formula $A=\left[-2\;ms^{-2},-1\;ms^{-2},0\;ms^{-2},1\;ms^{-2},2\;ms^{-2}\right]$
 \end_inset
 
+ corresponding to the longitudinal acceleration.
 
+\series bold
+ 
+\end_layout
+
+\begin_layout Standard
+The Transition model corresponds to standard linear Gaussian dynamics with:
 \end_layout
 
 \begin_layout Itemize
 
 \series bold
-Actions
+Transitions:
 \series default
-: 
-\begin_inset Formula $a\in\left[-2\;ms^{-2},-1\;ms^{-2},0\;ms^{-2},1\;ms^{-2},2\;ms^{-2}\right]$
-\end_inset
-
-
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-for ego vehicle we choose an acceleration along y-axis
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-
-\series bold
-Transitions
-\series default
-: 
+ 
 \begin_inset Formula $T\left(s'\mid s,a\right)=P\left(S_{i}^{t+1}\mid S_{i}^{t},a\right)=\mathcal{N}\left(T_{s}S_{i}^{t}+T_{a}\begin{bmatrix}a_{x}\\
 a_{y}
 \end{bmatrix}\right)$
@@ -526,12 +516,8 @@ a_{y}
  
 \end_layout
 
-\begin_deeper
-\begin_layout Itemize
-Linear Gaussian dynamics with a Constant Velocity Model
-\end_layout
-
-\begin_layout Itemize
+\begin_layout Standard
+Using a Constant Velocity Model with 
 \begin_inset Formula $T_{s}=\begin{bmatrix}1 & 0 & \text{dt} & 0\\
 0 & 1 & 0 & \text{dt}\\
 0 & 0 & 1 & 0\\
@@ -543,10 +529,7 @@ Linear Gaussian dynamics with a Constant Velocity Model
 \end{bmatrix}$
 \end_inset
 
-
-\end_layout
-
-\begin_layout Itemize
+ which corresponds to 
 \begin_inset Formula $\begin{bmatrix}x^{t+1}\\
 y^{t+1}\\
 v_{x}^{t+1}\\
@@ -566,27 +549,24 @@ a_{y}\text{dt}
 \end{bmatrix}$
 \end_inset
 
-
+.
+ The reward model accounts for efficiency (we penalize every step), safety
+ (we heavily pernalize collisions) and comfort (we penalize strong accelerations
+ and decelerations:
 \end_layout
 
-\end_deeper
 \begin_layout Itemize
 
 \series bold
 Reward
 \series default
-: efficiency + safety + comfort
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-\begin_inset Formula $R_{t}=-1-1000\times1\left[\text{d(ego,obj)}\leq10\right]-1\left[\left|a_{t}\right|=2\right]$
+: 
+\begin_inset Formula $R(s,a)=-1-1000\times1\left[\text{d(ego,obj)}_{s}\leq10\right]-1\left[\left|a\right|=2\right]$
 \end_inset
 
 
 \end_layout
 
-\end_deeper
 \begin_layout Subsection
 Algo 1, MCTS tree search
 \end_layout

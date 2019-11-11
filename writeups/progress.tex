@@ -7,6 +7,7 @@
 \usepackage{babel}
 \usepackage{float}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage[unicode=true]
  {hyperref}
@@ -187,29 +188,28 @@ simulation and test environment can be downloaded and installed from
 \section{Approach}
 
 \subsection{MDP model}
+
+A representation of the states in absolute coordinates would be $S_{t}=\left\{ \left(x,y,v_{x},v_{y}\right)_{\text{ego}},\left(x,y,v_{x},v_{y}\right)_{\text{obj}_{1..10}}\right\} $.
+But we use a relative and normalized $\in\left[-1,1\right]$ representation
+of the state (for easier generalization and learning) and account
+for the fact that the ego car drives along the y-axis only\textbf{. }
 \begin{itemize}
-\item \textbf{State} (absolute coordinates): $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(x,y,v_{x},v_{y}\right)_{\text{ego}},\left(x,y,v_{x},v_{y}\right)_{\text{obj}_{1..10}}\right\} $ 
-\begin{itemize}
-\item with $S_{i}^{t}=\left[x,y,v_{x},v_{y}\right]^{T}$ and $i\in\left[0,11\right]$
+\item \textbf{States:} $S=\left\{ \left(\frac{y}{y^{max}},\frac{v_{y}}{v_{y}^{max}}\right)_{\text{ego}},\left(\frac{\Delta x}{\Delta x^{max}},\frac{\Delta y}{\Delta y^{max}},\frac{\Delta v_{x}}{\Delta v_{x}^{max}},\frac{\Delta v_{y}}{\Delta v_{y}^{max}}\right)_{\text{obj}_{1..10}}\right\} $
+ie a vector $\in\mathbb{R}^{42}$ 
 \end{itemize}
-\end{itemize}
-We use a relative and normalized $\in\left[-1,1\right]$ representation
-of the state and account for the fact that the ego car drives along
-the y-axis only (in a further simplified first version we could even
-assume that the 10 other cars drive only along the x-axis, crossing
-orthogonally to the ego car path):
+While the state space is continuous we use a discrete action space. 
 \begin{itemize}
-\item \textbf{State} (relative coordinates): $S_{t}=\left\{ S_{i}^{t}\right\} _{i=0..11}=\left\{ \left(\frac{y}{y^{max}},\frac{v_{y}}{v_{y}^{max}}\right)_{\text{ego}},\left(\frac{\Delta x}{\Delta x^{max}},\frac{\Delta y}{\Delta y^{max}},\frac{\Delta v_{x}}{\Delta v_{x}^{max}},\frac{\Delta v_{y}}{\Delta v_{y}^{max}}\right)_{\text{obj}_{1..10}}\right\} $
-\item \textbf{Actions}: $a\in\left[-2\;ms^{-2},-1\;ms^{-2},0\;ms^{-2},1\;ms^{-2},2\;ms^{-2}\right]$
-\begin{itemize}
-\item for ego vehicle we choose an acceleration along y-axis
+\item \textbf{Actions:} $A=\left[-2\;ms^{-2},-1\;ms^{-2},0\;ms^{-2},1\;ms^{-2},2\;ms^{-2}\right]$
+corresponding to the longitudinal acceleration.\textbf{ }
 \end{itemize}
-\item \textbf{Transitions}: $T\left(s'\mid s,a\right)=P\left(S_{i}^{t+1}\mid S_{i}^{t},a\right)=\mathcal{N}\left(T_{s}S_{i}^{t}+T_{a}\begin{bmatrix}a_{x}\\
+The Transition model corresponds to standard linear Gaussian dynamics
+with:
+\begin{itemize}
+\item \textbf{Transitions:} $T\left(s'\mid s,a\right)=P\left(S_{i}^{t+1}\mid S_{i}^{t},a\right)=\mathcal{N}\left(T_{s}S_{i}^{t}+T_{a}\begin{bmatrix}a_{x}\\
 a_{y}
 \end{bmatrix}\right)$ 
-\begin{itemize}
-\item Linear Gaussian dynamics with a Constant Velocity Model
-\item $T_{s}=\begin{bmatrix}1 & 0 & \text{dt} & 0\\
+\end{itemize}
+Using a Constant Velocity Model with $T_{s}=\begin{bmatrix}1 & 0 & \text{dt} & 0\\
 0 & 1 & 0 & \text{dt}\\
 0 & 0 & 1 & 0\\
 0 & 0 & 0 & 1
@@ -217,8 +217,7 @@ a_{y}
 0 & \frac{\text{dt}^{2}}{2}\\
 \text{dt} & 0\\
 0 & \text{dt}
-\end{bmatrix}$
-\item $\begin{bmatrix}x^{t+1}\\
+\end{bmatrix}$ which corresponds to $\begin{bmatrix}x^{t+1}\\
 y^{t+1}\\
 v_{x}^{t+1}\\
 v_{y}^{t+1}
@@ -234,12 +233,11 @@ a_{y}\text{dt}
 \sigma_{y}\\
 \sigma_{v_{x}}\\
 \sigma_{v_{y}}
-\end{bmatrix}$
-\end{itemize}
-\item \textbf{Reward}: efficiency + safety + comfort
+\end{bmatrix}$. The reward model accounts for efficiency (we penalize every step),
+safety (we heavily pernalize collisions) and comfort (we penalize
+strong accelerations and decelerations:
 \begin{itemize}
-\item $R_{t}=-1-1000\times1\left[\text{d(ego,obj)}\leq10\right]-1\left[\left|a_{t}\right|=2\right]$
-\end{itemize}
+\item \textbf{Reward}: $R(s,a)=-1-1000\times1\left[\text{d(ego,obj)}_{s}\leq10\right]-1\left[\left|a\right|=2\right]$
 \end{itemize}
 
 \subsection{Algo 1, MCTS tree search}
