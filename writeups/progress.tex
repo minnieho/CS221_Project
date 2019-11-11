@@ -332,34 +332,38 @@ the sampling among already existing states to enable exploration in
 depth and not just in breadth. 
 
 \subsection{Algo 2, Approximate Q-learning}
-\begin{itemize}
-\item Model Free RL algorithm:
-\begin{itemize}
-\item $\hat{Q}_{\text{opt}}(s,a;\mathbf{w})=\mathbf{w}\cdot\phi(s,a)$
-\item $\hat{V}_{\text{opt}}(s')=\underset{a'\in\text{Actions}(s')}{\max}\hat{Q}_{\text{opt}}(s',a')$
-\item \textcolor{black}{$\text{Objective=}\left(\hat{Q}_{\text{opt}}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right)^{2}$}
-\item $\mathbf{w}\leftarrow\mathbf{w}-\eta\left[\hat{Q}_{\text{opt}}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right]\phi(s,a)$ 
-\end{itemize}
-\item Features Extractor 1: $\phi(s,a)=\begin{bmatrix}s_{42\times1}\\
-a_{1\times1}\\
-s_{42\times1}^{2}\\
-a_{1\times1}^{2}
-\end{bmatrix}$ 
 
-The state vector has 42 components (10 cars with 4 components each
-and 2 components for the ego car), action is a single number. We use
-quadratic components as well: as it is expected that the value of
-a $(s,a)$ tuple will depend on distances computations. Typically
-when computing Time To Collision, quadratic terms appear so we want
-to provide these relevant features and figure out by learning the
-weights associated to these features.
-\item Features Extractor 2: $\phi(s,a)=\begin{bmatrix}s_{6\times1}\\
+While ultimately and similarly to the papers referenced in the literature
+review section \cite{Silver2017MasteringTG,DBLP:journals/corr/abs-1905-12197,DBLP:journals/corr/abs-1905-02680,DBLP:journals/corr/abs-1712-01815,8814125}
+we intend to use Deep Learning to learn an evaluation function that
+will be used later on as a heuristic to guide the MCTS tree search,
+we will first try Approximate Q-learning to check how it performs
+with a simple set of handcrafted features. We first derive a simple
+features extractor. $\phi(s,a)=\begin{bmatrix}s_{6\times1}\\
 a_{1\times1}\\
 s_{6\times1}^{2}\\
 a_{1\times1}^{2}
-\end{bmatrix}$ we just take into account ego car + closest car to work with a minimum
-number of features. It may be easier to work with; to speed up learning.
-\end{itemize}
+\end{bmatrix}$ where we take into account the state vector of the ego car (2 components)
+and the state vector of the car with the smallest TTC (4 components).
+We also take into account the acceleration command of the ego car.
+We use quadratic components as well: as it is expected that the value
+of a $(s,a)$ tuple will depend on distances computations. Typically
+when computing Time To Collision, quadratic terms appear so we want
+to provide these relevant features and figure out by learning the
+weights associated to these features. We try to focus on a reduced
+set of relevant features to speed up training. The Q-function is parametrized
+by a vector $w$ with $\hat{Q}_{\text{opt}}(s,a;\mathbf{w})=\mathbf{w}\cdot\phi(s,a)$.
+We have $\hat{V}_{\text{opt}}(s')=\underset{a'\in\text{Actions}(s')}{\max}\hat{Q}_{\text{opt}}(s',a')$
+and use the objective $\left(\hat{Q}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right)^{2}$
+which leads to the following update rule while performing Sochastic
+Gradient Descent: $\mathbf{w}\leftarrow\mathbf{w}-\eta\left[\hat{Q}_{\text{opt}}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right]\phi(s,a)$.
+One of the problem we may encounter is that the data in simulation
+is not iid, but highly correlated from one simulation step to the
+other and the targets will vary a lot. This problem is typically handled
+by using an experience replay buffer (which is possible with an off
+policy algorithm) and using a different fixed Q-network for targets
+evaluation: which is updated less frequently than the Q-function used
+for predictions: as described in DeepMind papers \cite{article,DBLP:journals/corr/MnihKSGAWR13}. 
 
 \subsection{Algo 3, Deep Q-learning}
 

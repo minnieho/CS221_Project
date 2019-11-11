@@ -1085,58 +1085,32 @@ literal "false"
 Algo 2, Approximate Q-learning
 \end_layout
 
-\begin_layout Itemize
-Model Free RL algorithm:
-\end_layout
+\begin_layout Standard
+While ultimately and similarly to the papers referenced in the literature
+ review section 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Silver2017MasteringTG,DBLP:journals/corr/abs-1905-12197,DBLP:journals/corr/abs-1905-02680,DBLP:journals/corr/abs-1712-01815,8814125"
+literal "false"
 
-\begin_deeper
-\begin_layout Itemize
-\begin_inset Formula $\hat{Q}_{\text{opt}}(s,a;\mathbf{w})=\mathbf{w}\cdot\phi(s,a)$
 \end_inset
 
-
-\end_layout
-
-\begin_layout Itemize
-\begin_inset Formula $\hat{V}_{\text{opt}}(s')=\underset{a'\in\text{Actions}(s')}{\max}\hat{Q}_{\text{opt}}(s',a')$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-
-\color black
-\begin_inset Formula $\text{Objective=}\left(\hat{Q}_{\text{opt}}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right)^{2}$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-\begin_inset Formula $\mathbf{w}\leftarrow\mathbf{w}-\eta\left[\hat{Q}_{\text{opt}}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right]\phi(s,a)$
-\end_inset
-
+ we intend to use Deep Learning to learn an evaluation function that will
+ be used later on as a heuristic to guide the MCTS tree search, we will
+ first try Approximate Q-learning to check how it performs with a simple
+ set of handcrafted features.
+ We first derive a simple features extractor.
  
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Features Extractor 1: 
-\begin_inset Formula $\phi(s,a)=\begin{bmatrix}s_{42\times1}\\
+\begin_inset Formula $\phi(s,a)=\begin{bmatrix}s_{6\times1}\\
 a_{1\times1}\\
-s_{42\times1}^{2}\\
+s_{6\times1}^{2}\\
 a_{1\times1}^{2}
 \end{bmatrix}$
 \end_inset
 
- 
-\end_layout
-
-\begin_deeper
-\begin_layout Standard
-The state vector has 42 components (10 cars with 4 components each and 2
- components for the ego car), action is a single number.
+ where we take into account the state vector of the ego car (2 components)
+ and the state vector of the car with the smallest TTC (4 components).
+ We also take into account the acceleration command of the ego car.
  We use quadratic components as well: as it is expected that the value of
  a 
 \begin_inset Formula $(s,a)$
@@ -1146,21 +1120,47 @@ The state vector has 42 components (10 cars with 4 components each and 2
  Typically when computing Time To Collision, quadratic terms appear so we
  want to provide these relevant features and figure out by learning the
  weights associated to these features.
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Features Extractor 2: 
-\begin_inset Formula $\phi(s,a)=\begin{bmatrix}s_{6\times1}\\
-a_{1\times1}\\
-s_{6\times1}^{2}\\
-a_{1\times1}^{2}
-\end{bmatrix}$
+ We try to focus on a reduced set of relevant features to speed up training.
+ The Q-function is parametrized by a vector 
+\begin_inset Formula $w$
 \end_inset
 
- we just take into account ego car + closest car to work with a minimum
- number of features.
- It may be easier to work with; to speed up learning.
+ with 
+\begin_inset Formula $\hat{Q}_{\text{opt}}(s,a;\mathbf{w})=\mathbf{w}\cdot\phi(s,a)$
+\end_inset
+
+.
+ We have 
+\begin_inset Formula $\hat{V}_{\text{opt}}(s')=\underset{a'\in\text{Actions}(s')}{\max}\hat{Q}_{\text{opt}}(s',a')$
+\end_inset
+
+ and use the objective 
+\begin_inset Formula $\left(\hat{Q}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right)^{2}$
+\end_inset
+
+ which leads to the following update rule while performing Sochastic Gradient
+ Descent: 
+\begin_inset Formula $\mathbf{w}\leftarrow\mathbf{w}-\eta\left[\hat{Q}_{\text{opt}}(s,a;\mathbf{w})_{\text{pred}}-{\color{green}{\normalcolor \left(r+\gamma\hat{V}_{\text{opt}}(s')\right)_{\text{targ}}}}\right]\phi(s,a)$
+\end_inset
+
+.
+ One of the problem we may encounter is that the data in simulation is not
+ iid, but highly correlated from one simulation step to the other and the
+ targets will vary a lot.
+ This problem is typically handled by using an experience replay buffer
+ (which is possible with an off policy algorithm) and using a different
+ fixed Q-network for targets evaluation: which is updated less frequently
+ than the Q-function used for predictions: as described in DeepMind papers
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "article,DBLP:journals/corr/MnihKSGAWR13"
+literal "false"
+
+\end_inset
+
+.
+ 
 \end_layout
 
 \begin_layout Subsection
