@@ -554,6 +554,13 @@ status open
 
 
 \backslash
+begin{algorithm}[h]
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
 begin{algorithmic}[1] 
 \end_layout
 
@@ -614,6 +621,13 @@ EndFunction
 end{algorithmic}
 \end_layout
 
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithm}
+\end_layout
+
 \end_inset
 
 
@@ -624,6 +638,13 @@ end{algorithmic}
 \size scriptsize
 \begin_inset ERT
 status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithm}[h]
+\end_layout
 
 \begin_layout Plain Layout
 
@@ -831,6 +852,13 @@ EndFunction
 end{algorithmic}
 \end_layout
 
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithm}
+\end_layout
+
 \end_inset
 
 
@@ -846,11 +874,14 @@ status open
 
 
 \backslash
-begin{algorithmic}[1] 
+begin{algorithm}[h]
 \end_layout
 
 \begin_layout Plain Layout
 
+
+\backslash
+begin{algorithmic}[1] 
 \end_layout
 
 \begin_layout Plain Layout
@@ -934,16 +965,22 @@ EndFunction
 end{algorithmic}
 \end_layout
 
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithm}
+\end_layout
+
 \end_inset
 
 
 \end_layout
 
 \begin_layout Standard
-One remaining problem is that in chess or go, the state space is discrete
- and the above algorithm does not cope with continuous state space: the
- same state may never be sampled more than once from the generative model
- which will result in a shallow tree with just one layer.
+One remaining problem is that the above algorithm does not cope with continuous
+ state space: the same state may never be sampled more than once from the
+ generative model which will result in a shallow tree with just one layer.
  The Progressive Widening variant of MCTS 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -971,9 +1008,9 @@ literal "false"
 
 \end_inset
 
- we intend to use Deep Learning to learn an evaluation function that will
- be used later on as a heuristic to guide the MCTS tree search, we will
- first investigate Approximate Q-learning with a reduced set of features.
+ we intend to use Deep Learning to learn an evaluation function to be used
+ as a heuristic to guide the MCTS tree search, we will first investigate
+ Approximate Q-learning with a reduced set of features.
  Weuse the following features extractor.
  
 \begin_inset Formula $\phi(s,a)=\begin{bmatrix}s_{6\times1} & a_{1\times1} & s_{6\times1}^{2} & a_{1\times1}^{2}\end{bmatrix}^{T}$
@@ -1178,7 +1215,7 @@ literal "false"
 \begin_layout Standard
 \begin_inset CommandInset bibtex
 LatexCommand bibtex
-btprint "btPrintAll"
+btprint "btPrintCited"
 bibfiles "project"
 
 \end_inset

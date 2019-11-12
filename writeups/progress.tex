@@ -197,16 +197,19 @@ time limit or a maximum number of iterations. We then execute the
 action that maximizes $Q(s,a)$ at the root of the tree. The pseudo
 code of the algorithm is provided below:
 
-{\scriptsize{}\begin{algorithmic}[1] 
+{\scriptsize{}\begin{algorithm}[h]
+\begin{algorithmic}[1] 
 \Function{SelectAction}{$s,d$} 
 	\Loop
 		\State \Call {Simulate}{$s,d,\pi_0$}
 	\EndLoop
 	\State \Return arg max$_a\text{ }Q(s,a)$
 \EndFunction
-\end{algorithmic}}{\scriptsize\par}
+\end{algorithmic}
+\end{algorithm}}{\scriptsize\par}
 
-{\scriptsize{}\begin{algorithmic}[1] 
+{\scriptsize{}\begin{algorithm}[h]
+\begin{algorithmic}[1] 
 
 \Function{Simulate}{$s,d,\pi_0$} 
 	\If {$d=0$}
@@ -229,10 +232,11 @@ code of the algorithm is provided below:
 	\State \Return $q$ 
 \EndFunction
 
-\end{algorithmic}}{\scriptsize\par}
+\end{algorithmic}
+\end{algorithm}}{\scriptsize\par}
 
-{\scriptsize{}\begin{algorithmic}[1] 
-
+{\scriptsize{}\begin{algorithm}[h]
+\begin{algorithmic}[1] 
 \Function{Rollout}{$s,d,\pi_0$} 
 	\If {$d=0$}
 		\State \Return $0$
@@ -241,13 +245,13 @@ code of the algorithm is provided below:
 	\State $(s',r) \sim G(s,a)$
 	\State \Return $r+\lambda$ \Call {Rollout}{$s',d-1,\pi_0$}
 \EndFunction
-\end{algorithmic}}{\scriptsize\par}
+\end{algorithmic}
+\end{algorithm}}{\scriptsize\par}
 
-One remaining problem is that in chess or go, the state space is discrete
-and the above algorithm does not cope with continuous state space:
-the same state may never be sampled more than once from the generative
-model which will result in a shallow tree with just one layer. The
-Progressive Widening variant of MCTS \cite{DBLP:journals/corr/abs-1709-06196,Couetoux:2011:CUC:2177360.2177393}
+One remaining problem is that the above algorithm does not cope with
+continuous state space: the same state may never be sampled more than
+once from the generative model which will result in a shallow tree
+with just one layer. The Progressive Widening variant of MCTS \cite{DBLP:journals/corr/abs-1709-06196,Couetoux:2011:CUC:2177360.2177393}
 solves this problem by controlling the sampling of new states and
 the sampling among already existing states to enable exploration in
 depth and not just in breadth. 
@@ -255,10 +259,10 @@ depth and not just in breadth.
 \subsection{Algo 2, Approximate Q-learning}
 
 While similarly to \cite{Silver2017MasteringTG,DBLP:journals/corr/abs-1905-12197,DBLP:journals/corr/abs-1905-02680,DBLP:journals/corr/abs-1712-01815,8814125}
-we intend to use Deep Learning to learn an evaluation function that
-will be used later on as a heuristic to guide the MCTS tree search,
-we will first investigate Approximate Q-learning with a reduced set
-of features. Weuse the following features extractor. $\phi(s,a)=\begin{bmatrix}s_{6\times1} & a_{1\times1} & s_{6\times1}^{2} & a_{1\times1}^{2}\end{bmatrix}^{T}$
+we intend to use Deep Learning to learn an evaluation function to
+be used as a heuristic to guide the MCTS tree search, we will first
+investigate Approximate Q-learning with a reduced set of features.
+Weuse the following features extractor. $\phi(s,a)=\begin{bmatrix}s_{6\times1} & a_{1\times1} & s_{6\times1}^{2} & a_{1\times1}^{2}\end{bmatrix}^{T}$
 where we take into account the state vector of the ego car (2 components)
 and the state vector of the car with the smallest TTC (4 components).
 We also take into account the acceleration command of the ego car.
@@ -328,7 +332,6 @@ proposal stage. For the progress report, we have a first version of
 Q-learning with some results summarized in the appendix. We are working
 on the MCTS implementation.
 
-\nocite{*}
 \printbibliography
 
 \end{document}
