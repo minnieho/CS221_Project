@@ -32,99 +32,47 @@
 There is a rich litterature related to Motion Planning and a very
 detailed survey of traditional methods is provided in \cite{7490340}.
 Among the first 4 successful participants of DARPA Urban Challenge
-in 2007, the approaches vary. The winner, CMU Boss vehicle used variational
-techniques for local trajectory generation in a structured environment.
-This was done in a 2 steps path-velocity decomposition. A first step
-of path planning, using variational techniques, is performed and for
-every candidate path, a combination of different velocity profiles
-(constant, linear, linear ramp, trapezoidal) is applied : the combination
-of a path and velocity profile defines a trajectory. In unstructured
-environments (parking lots) or in error recovery situations a lattice
-graph in 4-dimensional configuration space (position, orientation
-and velocity) is searched with Anytime D{*} algorithm to find a collision-free
-path. More details are provided in \cite{Ferguson2009MotionPI,article,5980223}.
-The vehicle from Stanford used a search strategy coined Hybrid A{*}
-that constructs a tree of motion primitives by recursively applying
-a finite set of maneuvers. The search was guided by a carefully designed
-heuristic. The vehicle arriving 3rd, Victor Tango from Virginia Tech,
-constructs a graph discretization of possible maneuvers and searches
-the graph with the A{*} algorithm. The vehicle arriving 4th, developed
-by MIT used a variant of RRT algorithm with biased sampling. While
-all these techniques differ, they fundamentally rely on a graph search
-where nodes correspond to a configuration state and edges correspond
+in 2007, the approaches vary but they fundamentally rely on a graph
+search where nodes correspond to a configuration state and edges correspond
 to elementary motion primitives. Although they provide solutions,
 the runtime and state space can grow exponentially large. In this
-context, the use of heuristic to guide the search is important. (\textbf{NB:
-uncertainty is not properly considered here in these traditional MP
-methods. It is like reasoning with the mean state vector provided
-by sensor fusion output and ignoring the covariance matrix !})
+context, the use of heuristic to guide the search is important.
 
 More recently, Reinforcement Learning and Deep RL have been investigated
 in the context of Autonomous Driving for Decision Making either at
 the Behavioural Planning or Motion Planning level. In some research
 papers from Volvo \cite{DBLP:journals/corr/abs-1803-10056} and BMW
 \cite{inproceedings} , an RL agent is trained in simulation to take
-decision at a higher tactical level: the decisions relate to a maneuver
-selection, like lane change, rather than a low level acceleration
-command. DQN is used to train an agent. But the problem with Reinforcement
+decision at a tactical level: the decisions relate to a maneuver selection.
+DQN is used to train an agent. But the problem with Reinforcement
 Learning is that the utility is optimized in expectation. So even
 if the reward is designed to avoid collisions, this will be optimized
-in expectation: ultimately it is as if safety would be enforced with
-soft constraints rather than hard constraints. Which is of course
-not acceptable for a real vehicle. To solve this problem in \cite{inproceedings}
+in expectation only. To solve this problem in \cite{inproceedings}
 an additional safety check layer is added after the DQN agent to eventually
-override the DQN agent decision if it is considered unsafe. Checking
-a decision wrt to a specific criteria is simpler than designing a
-decision making system that jointly optimizes efficiency, comfort
-and safety objectives. With RL applied to AD we have to account for
-additional safety checks. In \cite{DBLP:journals/corr/abs-1904-07189}
+override the DQN agent decision. In \cite{DBLP:journals/corr/abs-1904-07189}
 Deep RL is applied at the local planner level: the action space is
 a set of longitudinal accelerations $\left\{ -4m/s^{2},-2m/s^{2},0m/s^{2},2m/s^{2}\right\} $
-applied along a given path at a T-intersection. Safety is handled
-in a different way here compared to previous BMW approach: the agent
-is constrained to choose among a restricted set of safe actions per
-state. So the safety is enforce before Deep RL. Ultimately car manufacters
-may want to combine both types of safety checks: constraining the
-action set per state before enabling an RL agent to make its own decision,
-and checking again the final sequence of decisions proposed by the
-RL agent.
+applied along a given path at a T-intersection. The agent is constrained
+to choose among a restricted set of safe actions per state. So the
+safety is enforce before Deep RL. Ultimately we may want combine both
+types of safety checks: constraining the action set per state before
+enabling an RL agent to make its own decision, and checking again
+the final sequence of decisions proposed by the RL agent.
 
-Now the interesting topic is how to best combine traditional Motion
-Planning with RL. What are the limitations of these techniques in
-isolation and how to use the strengths of both approaches and circumvent
-their weaknesses. Traditional motion planning relies heavily on tree
-search and to enable real time solutions good heuristics are required.
-Designing a good heuristic is hard. What if we could learn it ? By
-training an agent with model free RL we can potentially end up with
-an agent that performs pretty well most of the time and from time
-to times fails miserably in a way that is hard to explain. The main
-problems with model free RL are sample efficiency (we need a lot of
-data), enforcing hard constraints and explainability (how can we explain
-the decision taken by a RL agent which may become a problem for a
-car manufacturer). While a model based planning method has the advantages
-of explainability, do not rely on data and can deal in a more systematic
-way with hard constraints. As demonstrated in \cite{DBLP:journals/corr/abs-1904-11483}
-in simple situations RL methods have no benefit over rule based methods,
-pure RL does not enable the agent to act in safer way. But when the
-situation becomes much more complex with an increasing number of cars
-and pedestrians, the benefits of Deep RL methods become clear.
-
-In the gaming domain, chess and go, performances superior to human
-performances have been achieved with AlphaGo Zero \cite{Silver2017MasteringTG}:
+In the gaming domain, performances superior to human performances
+have been achieved with AlphaGo Zero \cite{Silver2017MasteringTG}:
 by combining planning with MCTS tree search and learning with RL.
 A neural network biases the sampling towards the most relevant parts
 of the search tree: a learnt policy-value function is used as a heuristic
-during inference. While during training, MCTS is used to improve the
-sample efficiency of RL training. Now there are a few major differences
-between a game like chess or go and our initial Motion Planning problem.
-In chess or go the state space is discrete and fully observable while
-in AD the state space is continuous and partially observable. In terms
-of action sets in both cases, we can deal with discrete action sets.
-But another challenge is that self-play can not be used in the context
-of Motion Planning. These challenges have been recently tackled in
-different publications. The applicability of AlphaGo Zero to Autonomous
-Driving has been studied in \cite{DBLP:journals/corr/abs-1905-02680,DBLP:journals/corr/abs-1905-12197,8814125}.
-
+during inference. Now there are a few major differences between chess
+or go and our Motion Planning problem. In chess or go the state space
+is discrete and fully observable while in AD the state space is continuous
+and partially observable. In terms of action sets in both cases, we
+can deal with discrete action sets. But another difference is that
+self-play can not be used in the context of Motion Planning. These
+challenges have been recently tackled in different publications. The
+applicability of AlphaGo Zero to Autonomous Driving has been studied
+in \cite{DBLP:journals/corr/abs-1905-02680,DBLP:journals/corr/abs-1905-12197,8814125}.
 In \cite{8814125} the Motion Planning problem is adressed in a 2
 steps path-velocity decomposition. The path planner employs hybrid
 A{*} to propose paths that are driveable and collision free wrt static
@@ -135,31 +83,17 @@ tree search algorithm like MCTS which uses additional lower bounds
 and upper bounds values. To guide the tree search of DESPOT, a NavA3C
 neural network is used. The NavA3C network is trained in simulation
 and is expected to provide tighter bounds than the heuristic commonly
-used for lower and upper bounds estimation.
+used for lower and upper bounds estimation. In \cite{DBLP:journals/corr/abs-1905-02680}
+the problem is considered at a higher level: at the behavioral planning
+level. It is mainly a set of lane changes decisions that are taken
+to navigate a highway or to reach a highway exit. The problem is formulated
+as a MDP problem. MCTS tree search is used as an online MDP solver
+and a learned policy-value network is used to efficiently guide the
+search. 
 
-In \cite{DBLP:journals/corr/abs-1905-12197} the problem of pedestrians
-collision avoidance in dense urban traffic areas is considered. Again
-the problem is formulated as a POMDP and DESPOT is used as an online
-solver. The 2 steps path-velocity decomposition is used: Hybrid A{*}
-plans a path and POMDP is restricted to control only the accelarations
-along the path. Two stages are considered: an imitation stage where
-a Neural Network is trained in simulation to solve the POMDP problem.
-In the improvement stage, LeTS-Drive uses Hyp-DESPOT, a massively
-parallel belief tree search algorithm, to plan vehicle motions. LeTS-Drive
-incorporates the prior knowledge learned in the policy and value networks
-into the heuristics of HyP-DESPOT in order to search efficiently within
-the limited planning time.
-
-In \cite{DBLP:journals/corr/abs-1905-02680} the problem is considered
-at a higher level: at the behavioral planning level. It is mainly
-a set of lane changes decisions that are taken to navigate a highway
-or to reach a highway exit. The problem is formulated as a MDP problem.
-MCTS tree search is used as an online MDP solver and a learned policy-value
-network is used to efficiently guide the search. 
-
-In our case we consider the problem of the local planner and velocity
-profile generation, similar to the 2 first papers, but with an approach
-mainly aligned with the later one.
+We consider the problem of the local planner and velocity profile
+generation, similar to the first paper, but with an approach mainly
+aligned with the later one.
 
 \section{Test Setup}
 
@@ -168,7 +102,7 @@ a given path of $(x,y)$ coordinates, find a set of acceleration decisions
 $(a_{x},a_{y})$ at discrete time steps to enable E to avoid a set
 of intersecting vehicles $\left\{ V\right\} .$
 
-\includegraphics[scale=0.3]{img/ActV0}
+\includegraphics[scale=0.25]{img/ActV0}
 
 The ego car in blue has to avoid 10 intersecting vehicles to reach
 a goal point. The position and speed of intersecting vehicles is not
@@ -186,6 +120,20 @@ simulation and test environment can be downloaded and installed from
 \href{https://github.com/PhilippeW83440/CS221_Project/tree/master/gym-act}{gym-act}.
 
 \section{Approach}
+
+We are dealing with a local planning task where a path to follow has
+been derived by some other algorithms (a variational technique or
+some A{*} or D{*} tree search algorithm). We have to derive a set
+of acceleration commands, such that we avoid dynamical obstacles that
+may cross our path. We handle a sequential decision making problem
+under uncertainty: the sensors provide noisy estimates. We first use
+a model based approach (an online MCTS tree search algorithm). We
+benchmark it against a model free approach (Q-learning or DQN). We
+then combine the 2 approaches, to guide the MCTS tree search with
+a learned heuristic. We target a fast, safe and explainable solution.
+We expect the safety and explainability to be obtained thanks to the
+model based approach and to gain some speed up thanks to the model
+free approach.
 
 \subsection{MDP model}
 
@@ -213,26 +161,14 @@ Using a Constant Velocity Model with $T_{s}=\begin{bmatrix}1 & 0 & \text{dt} & 0
 0 & 1 & 0 & \text{dt}\\
 0 & 0 & 1 & 0\\
 0 & 0 & 0 & 1
-\end{bmatrix},T_{a}=\begin{bmatrix}\frac{\text{dt}^{2}}{2} & 0\\
+\end{bmatrix},S_{i}^{t+1}=\begin{bmatrix}x\\
+y\\
+v_{x}\\
+v_{y}
+\end{bmatrix}T_{a}=\begin{bmatrix}\frac{\text{dt}^{2}}{2} & 0\\
 0 & \frac{\text{dt}^{2}}{2}\\
 \text{dt} & 0\\
 0 & \text{dt}
-\end{bmatrix}$ which corresponds to $\begin{bmatrix}x^{t+1}\\
-y^{t+1}\\
-v_{x}^{t+1}\\
-v_{y}^{t+1}
-\end{bmatrix}=\begin{bmatrix}x^{t}+v_{x}^{t}\text{dt}\\
-y^{t}+v_{y}^{t}\text{dt}\\
-v_{x}^{t}\\
-v_{y}^{t}
-\end{bmatrix}+\begin{bmatrix}a_{x}\frac{\text{dt}^{2}}{2}\\
-a_{y}\frac{\text{dt}^{2}}{2}\\
-a_{x}\text{dt}\\
-a_{y}\text{dt}
-\end{bmatrix}+\begin{bmatrix}\mathcal{\sigma}_{x}\\
-\sigma_{y}\\
-\sigma_{v_{x}}\\
-\sigma_{v_{y}}
 \end{bmatrix}$. The reward model accounts for efficiency (we penalize every step),
 safety (we heavily pernalize collisions) and comfort (we penalize
 strong accelerations and decelerations:
@@ -331,8 +267,7 @@ depth and not just in breadth.
 
 \subsection{Algo 2, Approximate Q-learning}
 
-While ultimately and similarly to the papers referenced in the literature
-review section \cite{Silver2017MasteringTG,DBLP:journals/corr/abs-1905-12197,DBLP:journals/corr/abs-1905-02680,DBLP:journals/corr/abs-1712-01815,8814125}
+While as in \cite{Silver2017MasteringTG,DBLP:journals/corr/abs-1905-12197,DBLP:journals/corr/abs-1905-02680,DBLP:journals/corr/abs-1712-01815,8814125}
 we intend to use Deep Learning to learn an evaluation function that
 will be used later on as a heuristic to guide the MCTS tree search,
 we will first try Approximate Q-learning to check how it performs
@@ -365,10 +300,23 @@ for predictions: as described in DeepMind papers \cite{article,DBLP:journals/cor
 
 \subsection{Algo 3, Deep Q-learning}
 
-Model Free RL method. Our Neural Network has 42 neurons as input,
-corresponding to the state vector, and 5 neurons as output. We will
-use a Neural Network architecture slightly adapted from \cite{DBLP:journals/corr/abs-1803-10056}.
-It is based on a CNN network as we want to have translational invariance
+We use a DQN algorithm with a replay memory buffer to ensure we are
+dealing with iid samples and a target network, updated less frequently
+than the optimisation network, to stabilize the training procedure
+as described in DeepMind papers \cite{article,DBLP:journals/corr/MnihKSGAWR13}.
+We use a Huber Loss which acts as MSE when error is small and as a
+mean absolute error when error is large: to make it more robust to
+outliers when the estimates of $Q$ are very noisy. Exploration is
+done with an $\epsilon$ -greedy policy. A batch size of $128$ is
+used, $\gamma=0.999$ and an Adam optimizer is used for the Batch
+Gradient Descent updates. Programming is done with pytorch and we
+use this code \href{https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html}{pytorch.org}
+as a starting point for the DQN setup.
+
+Our Neural Network has 42 neurons as input, corresponding to the state
+vector, and 5 neurons as output. We will use a Neural Network architecture
+slightly adapted from \cite{DBLP:journals/corr/abs-1803-10056}. It
+is based on a CNN network as we want to have translational invariance
 of the input. It should not matter to provide information about different
 cars in one order or the other.
 \begin{center}
@@ -377,41 +325,23 @@ cars in one order or the other.
 
 \subsection{Algo 4, MCTS tree search with a learned heuristic }
 
-Combining Planning and Learning, Model Based and Model Free RL. TODO
-post progress report.
-
-We want to use our learned Q-network $\hat{Q}(s,a;\mathbf{w})$ via
+We plan to use our learned Q-network $\hat{Q}(s,a;\mathbf{w})$ via
 approximate Q-learning or Deep Q-learning as a heuristic for MCTS
 tree search: to expand the tree in the most promising areas and hence
 come up faster with a good solution. A solution is considered good
 as soon as it is estimated collision free; we may run further MCTS
 tree searches up to some time limit, to find even better solutions:
-faster or more comfortable. The reward takes into account safety,
-comfort and efficiency. While there is a big penalty for collisions
-of $-1000,$ at every time step we penalize the reward by $-1$ to
-enforce efficiency and penalize every strong acceleration or deceleration,
-when $\left|a\right|=2\quad ms^{-2}$, by -2 to encourage more comfortable
-trajectories.
+faster or more comfortable.
 
-\section{Experimental Setup and Status}
+\section{Experiments}
 
-The source code is available here: \href{https://github.com/PhilippeW83440/CS221_Project}{CS221 Project}
-\begin{itemize}
-\item Baseline: simple rule - reflex based. DONE
-\item Oracle: assumes no uncertainty, UCS/A{*} tree search. DONE
-\item Sequential Decision Making with Uncertainty => solve a MDP
-\begin{itemize}
-\item Planning with MCTS tree search. ON-GOING: MDP model implementation
-+ our own MCTS algo implementation
-\item Approximate Q-learning: leverage on CS221 hw4 blackjack setup + custom
-Features Extractor + interface with our MDP model
-\item Deep Q-learning: basically the pytorch DQN setup from \href{https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html}{pytorch.org}
-customized with our proposed CNN network and interfaced with our own
-gymai environment (gymai-act for Anti Collision Tests)
-\item Combining Planning and Learning: we should have MCTS and Q-learning
-working independently first ..
-\end{itemize}
-\end{itemize}
+The source code is available here: \href{https://github.com/PhilippeW83440/CS221_Project}{CS221 Project}.
+The baseline (simple rule - reflex based) and oracle (assuming no
+uncertainty using UCS/A{*} tree search) have been implemented at the
+proposal stage. For the progress report, we have a first version of
+Q-learning with some results summarized in the appendix. We are working
+on the MCTS implementation.
+
 \nocite{*}
 \printbibliography
 
