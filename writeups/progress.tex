@@ -91,7 +91,13 @@ a given path of $(x,y)$ coordinates, find a set of acceleration decisions
 $(a_{x},a_{y})$ at discrete time steps to enable E to avoid a set
 of intersecting vehicles $\left\{ V\right\} .$
 
+\begin{figure}[H]
+\begin{centering}
 \includegraphics[scale=0.25]{img/ActV0}
+\par\end{centering}
+\caption{Custom openai gym Act-v1 env}
+
+\end{figure}
 
 The ego car in blue has to avoid 10 intersecting vehicles to reach
 a goal point. The position and speed of intersecting vehicles is not
@@ -290,13 +296,18 @@ as a starting point for the DQN setup.
 Our Neural Network has 42 neurons as input, corresponding to all cars
 position and speed information (relative and normalized coordinates),
 and 5 neurons as output, corresponding to the 5 possible control commands.
-We use a Neural Network architecture slightly adapted from \cite{DBLP:journals/corr/abs-1803-10056},
-based on a CNN network as we want translational invariance of the
-input: it should not matter to provide information about different
-cars in one order or the other.
-\begin{center}
-\includegraphics[scale=0.3]{img/CNN_for_DQN}
-\par\end{center}
+We use a CNN architecture similarly to \cite{DBLP:journals/corr/abs-1803-10056},
+leveraging on CNN translational invariance properties: the order of
+information about different cars should not matter.
+
+\begin{figure}[H]
+\begin{centering}
+\includegraphics[scale=0.25]{img/CNN}
+\par\end{centering}
+\caption{Q-function as a CNN network}
+
+\end{figure}
+
 
 \subsection{Algo 4, MCTS tree search with a learned heuristic }
 

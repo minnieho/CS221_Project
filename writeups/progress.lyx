@@ -266,10 +266,38 @@ The problem statement is as follows.
 \end_layout
 
 \begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
 \begin_inset Graphics
 	filename img/ActV0.png
 	lyxscale 25
 	scale 25
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Custom openai gym Act-v1 env
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
 
 \end_inset
 
@@ -1056,7 +1084,7 @@ literal "false"
 Our Neural Network has 42 neurons as input, corresponding to all cars position
  and speed information (relative and normalized coordinates), and 5 neurons
  as output, corresponding to the 5 possible control commands.
- We use a Neural Network architecture slightly adapted from 
+ We use a CNN architecture similarly to 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "DBLP:journals/corr/abs-1803-10056"
@@ -1064,17 +1092,43 @@ literal "false"
 
 \end_inset
 
-, based on a CNN network as we want translational invariance of the input:
- it should not matter to provide information about different cars in one
- order or the other.
+, leveraging on CNN translational invariance properties: the order of informatio
+n about different cars should not matter.
 \end_layout
 
 \begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename img/CNN_for_DQN.png
-	lyxscale 30
-	scale 30
+	filename img/CNN.jpeg
+	lyxscale 25
+	scale 25
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Q-function as a CNN network
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
 
 \end_inset
 
