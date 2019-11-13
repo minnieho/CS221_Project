@@ -116,16 +116,11 @@ class DQN(nn.Module):
 #		x = F.relu(self.bn3(self.conv3(x)))
 #		return self.head(x.view(x.size(0), -1))
 
-
-######################################################################
-# Input extraction
-# ^^^^^^^^^^^^^^^^
-#
-# The code below are utilities for extracting and processing rendered
-# images from the environment. It uses the ``torchvision`` package, which
-# makes it easy to compose image transforms. Once you run the cell it will
-# display an example patch that it extracted.
-#
+def numpy_to_torch(state):
+	s = torch.from_numpy(state).to(device)
+	# unsqueeze(0) to add a batch dim
+	s = s.unsqueeze(0).to(device).float()
+	return s
 
 env.reset()
 
@@ -171,10 +166,7 @@ def select_action(state):
 	steps_done += 1
 	if sample > eps_threshold:
 		with torch.no_grad():
-			#pdb.set_trace()
-			s = torch.from_numpy(state).to(device)
-			s = s.to(device)
-			return torch.argmax(policy_net(s.float())).view(1, 1)
+			return torch.argmax(policy_net(state)).view(1, 1)
 	else:
 		return torch.tensor([[random.randrange(n_actions)]], device=device, dtype=torch.long)
 
@@ -202,7 +194,6 @@ def optimize_model():
 	# Compute Q(s_t, a) - the model computes Q(s_t), then we select the
 	# columns of actions taken. These are the actions which would've been taken
 	# for each batch state according to policy_net
-	pdb.set_trace()
 	state_action_values = policy_net(state_batch).gather(1, action_batch)
 
 	# Compute V(s_{t+1}) for all next states.
@@ -243,6 +234,7 @@ num_episodes = 50
 for i_episode in range(num_episodes):
 	# Initialize the environment and state
 	state = env.reset()
+	state = numpy_to_torch(state)
 	cumulated_reward = 0
 	images = []
 
@@ -250,6 +242,7 @@ for i_episode in range(num_episodes):
 		# Select and perform an action
 		action = select_action(state)
 		next_state, reward, done, info = env.step(action.item())
+		next_state = numpy_to_torch(next_state)
 		cumulated_reward += reward
 		print("Step {}: action={} reward={} done={} info={}".format(t, action, reward, done, info))
 		img = env.render()
