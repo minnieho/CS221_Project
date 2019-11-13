@@ -18,7 +18,7 @@ import torchvision.transforms as T
 
 
 #env = gym.make('CartPole-v0').unwrapped
-env = gym.make("Act-v1")
+env = gym.make("Act-v2")
 
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

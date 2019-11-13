@@ -336,7 +336,9 @@ class ActEnv(gym.Env):
 		self.s = state
 
 		if self.pi_type == 'cnn':
-			return self.render(mode='cnn')
+			return self.render(mode='cnn') # state is raw picture
+		elif self.pi_type == 'qlearning':
+			return self._relative_coords_qlearning(self.s)
 		else:
 			return self._relative_coords(self.s)
 		#return self.s
@@ -476,6 +478,15 @@ class ActEnv(gym.Env):
 		#s_rel[0:4] = 0 we need it for later use
 		return s_rel[4:]
 
+	# TODO normalize
+	def _relative_coords_qlearning(self, s):
+		s_rel = np.copy(s)
+		for n in range(self.nobjs):
+			for i in range(4):
+				s_rel[(n+1)*4+i] = s_rel[(n+1)*4+i] - s_rel[i]
+		#s_rel[0:4] = 0 we need it for later use
+		return s_rel
+
 	def _reduced_state(self, s):
 		# Vector of 5 floats: ego-relative [x,y,vx,vy,ttc] of most dangerous car
 		ttc, n = get_smallest_TTC(s, self.dist_collision)
@@ -549,8 +560,10 @@ class ActEnv(gym.Env):
 				info = "success"
 
 		#return self.s, reward, done, {} # TEMP just for HW3-PG video recordiong info
-		if self.pi_type == 'cnn':
+		if self.pi_type == 'cnn': # state is raw picture
 			return self.render(mode='cnn'), reward, done, info # TEMP just for HW3-PG video recordiong info
+		elif self.pi_type == 'qlearning':
+			return self._relative_coords_qlearning(self.s), reward, done, info
 		else:
 			return self._relative_coords(self.s), reward, done, info # TEMP just for HW3-PG video recordiong info
 		#return np.array([self.penalty_s(self.s)]), reward, done, {}
