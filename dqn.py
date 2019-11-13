@@ -73,34 +73,48 @@ class ReplayMemory(object):
 		return len(self.memory)
 
 
-# TODO network definition & setup
+# DQN: start experiments with a simple DNN
 class DQN(nn.Module):
 
-	def __init__(self, h, w, outputs):
+	def __init__(self, inputs=44, outputs=5):
 		super(DQN, self).__init__()
-		self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
-		self.bn1 = nn.BatchNorm2d(16)
-		self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-		self.bn2 = nn.BatchNorm2d(32)
-		self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
-		self.bn3 = nn.BatchNorm2d(32)
+		self.fc1 = nn.Linear(inputs, 100)
+		self.fc2 = nn.Linear(100, 100)
+		self.fc3 = nn.Linear(100, outputs)
 
-		# Number of Linear input connections depends on output of conv2d layers
-		# and therefore the input image size, so compute it.
-		def conv2d_size_out(size, kernel_size = 5, stride = 2):
-			return (size - (kernel_size - 1) - 1) // stride  + 1
-		convw = conv2d_size_out(conv2d_size_out(conv2d_size_out(w)))
-		convh = conv2d_size_out(conv2d_size_out(conv2d_size_out(h)))
-		linear_input_size = convw * convh * 32
-		self.head = nn.Linear(linear_input_size, outputs)
-
-	# Called with either one element to determine next action, or a batch
-	# during optimization. Returns tensor([[left0exp,right0exp]...]).
 	def forward(self, x):
-		x = F.relu(self.bn1(self.conv1(x)))
-		x = F.relu(self.bn2(self.conv2(x)))
-		x = F.relu(self.bn3(self.conv3(x)))
-		return self.head(x.view(x.size(0), -1))
+		x = F.relu(self.fc1(x))
+		x = F.relu(self.fc2(x))
+		x = self.fc3(x)
+		return x
+
+#class DQN(nn.Module):
+#
+#	def __init__(self, h, w, outputs):
+#		super(DQN, self).__init__()
+#		self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
+#		self.bn1 = nn.BatchNorm2d(16)
+#		self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
+#		self.bn2 = nn.BatchNorm2d(32)
+#		self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
+#		self.bn3 = nn.BatchNorm2d(32)
+#
+#		# Number of Linear input connections depends on output of conv2d layers
+#		# and therefore the input image size, so compute it.
+#		def conv2d_size_out(size, kernel_size = 5, stride = 2):
+#			return (size - (kernel_size - 1) - 1) // stride  + 1
+#		convw = conv2d_size_out(conv2d_size_out(conv2d_size_out(w)))
+#		convh = conv2d_size_out(conv2d_size_out(conv2d_size_out(h)))
+#		linear_input_size = convw * convh * 32
+#		self.head = nn.Linear(linear_input_size, outputs)
+#
+#	# Called with either one element to determine next action, or a batch
+#	# during optimization. Returns tensor([[left0exp,right0exp]...]).
+#	def forward(self, x):
+#		x = F.relu(self.bn1(self.conv1(x)))
+#		x = F.relu(self.bn2(self.conv2(x)))
+#		x = F.relu(self.bn3(self.conv3(x)))
+#		return self.head(x.view(x.size(0), -1))
 
 
 ######################################################################
@@ -127,14 +141,18 @@ TARGET_UPDATE = 10
 n_actions = env.action_space.n
 action = 0
 obs, reward, done, info = env.step(action)
-img = env.render()
-show_img(img)
+#img = env.render()
+#show_img(img)
 
-pdb.set_trace()
+n_feats = env.observation_space.shape[0] # ego [x,y,vx,vy] + 10 cars [x,y,vx,vy]
+assert n_feats == 44 # should be 44 ...
 
-# TODO network definition & setup
-policy_net = DQN(screen_height, screen_width, n_actions).to(device)
-target_net = DQN(screen_height, screen_width, n_actions).to(device)
+policy_net = DQN(n_feats, n_actions).to(device)
+target_net = DQN(n_feats, n_actions).to(device)
+
+policy_net = policy_net.float()
+target_net = target_net.float()
+
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 
@@ -153,10 +171,10 @@ def select_action(state):
 	steps_done += 1
 	if sample > eps_threshold:
 		with torch.no_grad():
-			# t.max(1) will return largest column value of each row.
-			# second column on max result is index of where max element was
-			# found, so we pick action with the larger expected reward.
-			return policy_net(state).max(1)[1].view(1, 1)
+			#pdb.set_trace()
+			s = torch.from_numpy(state).to(device)
+			s = s.to(device)
+			return torch.argmax(policy_net(s.float())).view(1, 1)
 	else:
 		return torch.tensor([[random.randrange(n_actions)]], device=device, dtype=torch.long)
 
@@ -175,10 +193,8 @@ def optimize_model():
 
 	# Compute a mask of non-final states and concatenate the batch elements
 	# (a final state would've been the one after which simulation ended)
-	non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
-										  batch.next_state)), device=device, dtype=torch.uint8)
-	non_final_next_states = torch.cat([s for s in batch.next_state
-												if s is not None])
+	non_final_mask = torch.tensor(tuple(map(lambda s: s is not None, batch.next_state)), device=device, dtype=torch.uint8)
+	non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
 	state_batch = torch.cat(batch.state)
 	action_batch = torch.cat(batch.action)
 	reward_batch = torch.cat(batch.reward)
@@ -186,6 +202,7 @@ def optimize_model():
 	# Compute Q(s_t, a) - the model computes Q(s_t), then we select the
 	# columns of actions taken. These are the actions which would've been taken
 	# for each batch state according to policy_net
+	pdb.set_trace()
 	state_action_values = policy_net(state_batch).gather(1, action_batch)
 
 	# Compute V(s_{t+1}) for all next states.
@@ -234,14 +251,14 @@ for i_episode in range(num_episodes):
 		action = select_action(state)
 		next_state, reward, done, info = env.step(action.item())
 		cumulated_reward += reward
-		print("Step {}: action={} reward={} done={} info={}".format(n, action, reward, done, info))
+		print("Step {}: action={} reward={} done={} info={}".format(t, action, reward, done, info))
 		img = env.render()
 		images.append(img)
 		reward = torch.tensor([reward], device=device)
 
 		# Observe new state
 		if done:
-			pdb.set_trace()
+			#pdb.set_trace()
 			next_state = None
 			print("End of episode {} with cumulated_reward {}".format(i_episode, cumulated_reward))
 

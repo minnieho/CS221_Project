@@ -284,8 +284,10 @@ class ActEnv(gym.Env):
 		else:
 			self.action_space = spaces.Box(low=-self.max_accel, high=self.max_accel, shape=(1,))
 		# 1+nobjs: x,y,vx,vy with x,y in [0,200] and vx,vy in [0,40]
-		#self.observation_space = spaces.Box(low=0.0, high=200.0, shape=((1+nobjs)*4,))
-		self.observation_space = spaces.Box(low=0.0, high=200.0, shape=(nobjs*4,))
+		if pi_type == 'qlearning':
+			self.observation_space = spaces.Box(low=0.0, high=200.0, shape=((1+nobjs)*4,))
+		else:
+			self.observation_space = spaces.Box(low=0.0, high=200.0, shape=(nobjs*4,))
 		#self.observation_space = spaces.Box(low=0.0, high=200.0, shape=(nobjs,)) # TTC for each car
 		#self.observation_space = spaces.Box(low=0, high=255, shape=(250,250,3), dtype=np.uint8)
 		#self.observation_space = spaces.Box(low=0, high=255, shape=(250,250,3))
