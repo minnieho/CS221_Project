@@ -208,6 +208,7 @@ def optimize_model():
 
 	# Compute Huber loss
 	loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
+	print("loss {}".format(loss))
 
 	# Optimize the model
 	optimizer.zero_grad()
@@ -230,7 +231,8 @@ def optimize_model():
 # duration improvements.
 #
 
-num_episodes = 50
+res = 0
+num_episodes = 100
 for i_episode in range(num_episodes):
 	# Initialize the environment and state
 	state = env.reset()
@@ -253,6 +255,7 @@ for i_episode in range(num_episodes):
 		if done:
 			#pdb.set_trace()
 			next_state = None
+			res += cumulated_reward
 			print("End of episode {} with cumulated_reward {}".format(i_episode, cumulated_reward))
 
 		# Store the transition in memory
@@ -272,6 +275,6 @@ for i_episode in range(num_episodes):
 	if i_episode % TARGET_UPDATE == 0:
 		target_net.load_state_dict(policy_net.state_dict())
 
-print('Complete')
+print('Completed with an average cumulated reward = {}'.format(res/num_episodes))
 env.render()
 env.close()
