@@ -26,9 +26,9 @@ When you're done working on the project, deactivate the virtual environment with
 ### Uniform Cost Search metrics
 
 During the tree search we use a Time Step of 250 ms.  
-Which means with a depth of 20 we can explore over a 5 seconds time horizon.
-The scene is setup with cars including ego vehicle driving around 20 m/s.
-So in 5 seconds we typically cover distances of 100 meters.
+Which means with a depth of 20 we can explore over a 5 seconds time horizon.  
+The scene is setup with cars including ego vehicle driving around 20 m/s.  
+So in 5 seconds we typically cover distances of 100 meters.  
 
 | goal dist (m)| depth | explored |  min cost  |  time (sec)| 
 |:------------:|:-----:|:--------:|:----------:|:----------:|
