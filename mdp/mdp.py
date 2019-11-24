@@ -91,6 +91,11 @@ def transition_ca(s, a, dt):
 					[0.0, dt]])
 	return np.dot(Ts, s) + np.dot(Ta, a)
 
+# mean  = [x, y, vx, vy]
+# sigma = [sigma_x, sigma_y, sigma_vx, sigma_vy]
+def mvNormal(mean, sigma):
+	return np.random.multivariate_normal(mean, np.diag(sigma))
+
 
 class ActMDP(object): # Anti Collision Tests problem
 	# actions are accelerations
@@ -160,13 +165,16 @@ class ActMDP(object): # Anti Collision Tests problem
 
 		s = state[0:4]
 		a = np.array([0.0, action])
-		sp[0:4] = transition_ca(s, a, self.dt)
+		sp[0:4] = transition_ca(s, a, self.dt) # ego is known - under control
 
 		idx = 4
 		for n in range(self.nobjs):
 			s_obj = state[idx:idx+4]
 			a_obj = np.array([0.0, 0.0]) # CV model so far
 			sp[idx:idx+4] = transition_ca(s_obj, a_obj, self.dt)
+			# mean = transition_ca(s_obj, a_obj, self.dt)
+			# TODO sigma values (may depend on dist(ego, obj) or how far we are in the future for prediction ...
+			#sp[idx:idx+4] = mvNormal(mean, [1e-1, 1e-1, 1e-1, 1e-1]) # TODO sigma values
 			idx += 4
 
 		dist_nearest_obj = self._get_dist_nearest_obj(sp)
