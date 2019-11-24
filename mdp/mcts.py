@@ -32,7 +32,7 @@ def mcts(mdp, depth=10, iters=10000, sort=False):
 			return rollout(s, d, pi0)
 
 		a = max([(Q[(s,a)]+c*math.sqrt(math.log(Ns[s])/(1e-5 + Nsa[(s,a)])), a) for a in mdp.actions(s)])[1] # argmax
-		sp, _, r = mdp.sampleSuccProbReward(s, a)
+		sp, r = mdp.sampleSuccReward(s, a)
 		q = r + mdp.discount() * simulate(sp, d-1, pi0)
 		Nsa[(s,a)] += 1
 		Ns[s] += 1
@@ -43,7 +43,7 @@ def mcts(mdp, depth=10, iters=10000, sort=False):
 		if d == 0 or mdp.isEnd(s): # typo in book ?
 			return 0
 		a = pi0(s)
-		sp, _, r = mdp.sampleSuccProbReward(s, a)
+		sp, r = mdp.sampleSuccReward(s, a)
 		return r + mdp.discount() * rollout(sp, d-1, pi0)
 
 	s = mdp.startState()
@@ -51,7 +51,7 @@ def mcts(mdp, depth=10, iters=10000, sort=False):
 	while True:
 		a = selectAction(s, depth, iters)
 		#a = 'tram' # 'walk'
-		sp, prob, r = mdp.sampleSuccProbReward(s, a)
+		sp, r = mdp.sampleSuccReward(s, a)
 		print("Step {}: (s,a,r,sp)=({}, {}, {:.1f}, {})".format(step, s,a,r,sp))
 		step += 1
 		s = sp
