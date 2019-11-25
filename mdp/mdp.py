@@ -71,7 +71,6 @@ class TransportationMDP(object):
 		#print("pi0({})".format(s))
 		return random.choice(self.actions(s))
 
-	# TODO add piBaseline
 
 
 def get_dist(obj1, obj2):
@@ -100,11 +99,11 @@ def mvNormal(mean, sigma):
 class ActMDP(object): # Anti Collision Tests problem
 	# actions are accelerations
 	#def __init__(self, nobjs=10, dist_collision=10, dt=0.25, actions=[-4., -2., -1., 0., +1., +2.]):
-	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, actions=[-2., -1., 0., +1., +2.], discount=1):
+	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-2., -1., 0., +1., +2.], discount=0.99):
 		self.nobjs = nobjs
 		self.dist_collision = dist_collision
 		self.dt = dt
-		self.actions = actions
+		self.action_set = action_set
 		# x, y, vx, vy
 		self.start = np.array([100.0,	0.0,  0.0,		20.0], dtype=float)
 		self.goal  = np.array([100.0, 200.0, 0.0, 0.0], dtype=float) # down from 200 to 50
@@ -189,7 +188,7 @@ class ActMDP(object): # Anti Collision Tests problem
 
 	def actions(self, s):
 		# TODO restrict action set in some cases
-		return self.actions
+		return self.action_set
 
 	def succProbReward(self, s, a):
 		# we can't return a list
@@ -197,13 +196,19 @@ class ActMDP(object): # Anti Collision Tests problem
 
 	def sampleSuccReward(self, s, a): # G(s,a) for mcts or Q-learning
 		sp, r = self._step(s, a)
+		return (tuple(sp), r) # make the state hashable
 
 	def discount(self):
 		return self.gamma
 
-	def pi0(self, s):
+	def piRandom(self, s):
 		#print("pi0({})".format(s))
 		return random.choice(self.actions(s))
+
+	def pi0(self, s):
+		return 0. # no accel, no decel
+
+	# TODO add piBaseline
 
 #random.seed(30)
 #

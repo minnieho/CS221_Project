@@ -10,7 +10,7 @@ from mdp import *
 # -------------------
 # Inference with MCTS
 # -------------------
-def mcts(mdp, depth=10, iters=2000, explorConst=1.0, tMaxRollouts=200, reuseTree=True):
+def mcts(mdp, depth=10, iters=100, explorConst=1.0, tMaxRollouts=200, reuseTree=True):
 	Tree = set()
 	Nsa = {}
 	Ns = {}
@@ -18,7 +18,7 @@ def mcts(mdp, depth=10, iters=2000, explorConst=1.0, tMaxRollouts=200, reuseTree
 	c = explorConst # param controlling amount of exploration
 	tMax = tMaxRollouts # max steps used to estimate Qval via rollout
 
-	def selectAction(s, d=10, iters=2000, c=1.0):
+	def selectAction(s, d=10, iters=100, c=1.0):
 		for _ in range(iters):
 			simulate(s, d, mdp.pi0)
 		return max([(Q[(s,a)], a) for a in mdp.actions(s)])[1] # argmax
@@ -71,5 +71,7 @@ def mcts(mdp, depth=10, iters=2000, explorConst=1.0, tMaxRollouts=200, reuseTree
 #print(mdp.actions(3))
 #print(mdp.succProbReward(3, 'walk'))
 #print(mdp.succProbReward(3, 'tram'))
-mdp = TransportationMDP(N=10)
+
+#mdp = TransportationMDP(N=10)
+mdp = ActMDP()
 mcts(mdp)
