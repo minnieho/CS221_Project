@@ -62,6 +62,8 @@ def mcts(mdp, depth=10, iters=100, explorConst=1.0, tMaxRollouts=200, reuseTree=
 		#a = 'tram' # 'walk'
 		sp, r = mdp.sampleSuccReward(s, a)
 		print("Step {}: (s,a,r,sp)=({}, {}, {:.1f}, {})".format(step, s,a,r,sp))
+		if r <= -1000:
+			pdb.set_trace()
 		step += 1
 		s = sp
 		if mdp.isEnd(s) or step > 1000:

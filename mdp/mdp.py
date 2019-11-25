@@ -90,7 +90,7 @@ def transition_ca(s, a, dt):
 					[0.0, dt]])
 	return np.dot(Ts, s) + np.dot(Ta, a)
 
-# mean  = [x, y, vx, vy]
+# mean	= [x, y, vx, vy]
 # sigma = [sigma_x, sigma_y, sigma_vx, sigma_vy]
 def mvNormal(mean, sigma):
 	return np.random.multivariate_normal(mean, np.diag(sigma))
@@ -99,11 +99,12 @@ def mvNormal(mean, sigma):
 class ActMDP(object): # Anti Collision Tests problem
 	# actions are accelerations
 	#def __init__(self, nobjs=10, dist_collision=10, dt=0.25, actions=[-4., -2., -1., 0., +1., +2.]):
-	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-2., -1., 0., +1., +2.], discount=0.99):
+	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-2., -1., 0., +1., +2.], discount=0.9, restrict_actions=True):
 		self.nobjs = nobjs
 		self.dist_collision = dist_collision
 		self.dt = dt
 		self.action_set = action_set
+		self.restrict_actions = restrict_actions # will restrict actions(s) to safe_actions(s)
 		# x, y, vx, vy
 		self.start = np.array([100.0,	0.0,  0.0,		20.0], dtype=float)
 		self.goal  = np.array([100.0, 200.0, 0.0, 0.0], dtype=float) # down from 200 to 50
@@ -135,6 +136,53 @@ class ActMDP(object): # Anti Collision Tests problem
 
 	def isEnd(self, s):
 		return (s[1] >= self.goal[1])
+
+	###########################################
+	# Hard Constraint w.r.t. Time To Collision
+	###########################################
+	def _get_TTC(self, ego, obj, radius):
+		x1, y1, vx1, vy1 = ego[0], ego[1], ego[2], ego[3]
+		x2, y2, vx2, vy2 = obj[0], obj[1], obj[2], obj[3]
+		a = (vx1 - vx2) **2 + (vy1 - vy2) **2
+		b = 2 * ((x1 - x2) * (vx1 - vx2) + (y1 - y2) * (vy1 - vy2))
+		c = (x1 - x2) **2 + (y1 - y2) **2 - radius **2
+		if a == 0 and b == 0:
+			if c == 0:
+				return 0
+			else:
+				return np.inf
+		if a == 0 and b != 0:
+			t = -c / b
+			if t < 0:
+				return np.inf
+			else:
+				return t
+		delta = b **2 - 4 * a * c
+		if delta < 0:
+			return np.inf
+		t1 = (-b - np.sqrt(delta)) / (2 * a)
+		t2 = (-b + np.sqrt(delta)) / (2 * a)
+		if t1 < 0:
+			t1 = np.inf
+		if t2 < 0:
+			t2 = np.inf
+		return min(t1, t2)
+
+	def _get_smallest_TTC(self, s, dist_collision):
+		radius = dist_collision
+		ego = s[0:4]
+		smallest_TTC = np.Inf
+		smallest_TTC_obj = -1
+		idx = 4
+		for n in range(int((len(s)-4)/4)):
+			obj = s[idx:idx+4]
+			TTC = self._get_TTC(ego, obj, radius)
+			if TTC < smallest_TTC:
+				smallest_TTC = TTC
+				smallest_TTC_obj = n
+			idx += 4
+		#return smallest_TTC, smallest_TTC_obj
+		return smallest_TTC
 
 	def _get_dist_nearest_obj(self, s):
 		nobjs = int(len(s)/4 - 1)
@@ -187,8 +235,28 @@ class ActMDP(object): # Anti Collision Tests problem
 		return sp, reward
 
 	def actions(self, s):
-		# TODO restrict action set in some cases
-		return self.action_set
+		if self.restrict_actions:
+			sTTC = self._get_smallest_TTC(s, self.dist_collision)
+			#print("sTTC {}".format(sTTC))
+			safe_action_set = []
+			spTTC_set = []
+			for a in self.action_set:
+				sp, r = self._step(s, a)
+				spTTC = self._get_smallest_TTC(sp, self.dist_collision)
+				spTTC_set.append((spTTC, a))
+				#print("spTTC {}".format(spTTC))
+				if spTTC >= 10 or (spTTC < 10 and spTTC > sTTC):
+					safe_action_set.append(a)
+
+			if safe_action_set == []:
+				# return just 1 or all ???
+				#print("NO SAFE ACTIONS !!!")
+				return [max(spTTC_set)[1]] # make it iterable => array single elt
+				#return self.action_set
+			else:
+				return safe_action_set
+		else:
+			return self.action_set
 
 	def succProbReward(self, s, a):
 		# we can't return a list
