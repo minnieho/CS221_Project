@@ -227,11 +227,11 @@ class ActMDP(object): # Anti Collision Tests problem
 		dist_nearest_obj = self._get_dist_nearest_obj(sp)
 		# collision or driving backward (negative speed)
 		if dist_nearest_obj < self.dist_collision or sp[3] < 0:
-			reward = -1000
+			reward = -1000/1000
 		elif abs(action) >= 2:
-			reward = -2
+			reward = -2/1000
 		else:
-			reward = -1
+			reward = -1/1000
 		return sp, reward
 
 	def actions(self, s):
