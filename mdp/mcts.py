@@ -10,26 +10,30 @@ from mdp import *
 # -------------------
 # Inference with MCTS
 # -------------------
-def mcts(mdp, depth=10, iters=10000, sort=False):
+def mcts(mdp, depth=10, iters=2000, explorConst=1.0, tMaxRollouts=200, reuseTree=True):
 	Tree = set()
 	Nsa = {}
 	Ns = {}
 	Q = {}
-	c = 1. # param controlling amount of exploration
+	c = explorConst # param controlling amount of exploration
+	tMax = tMaxRollouts # max steps used to estimate Qval via rollout
 
-	def selectAction(s, d=10, iters=100):
+	def selectAction(s, d=10, iters=2000, c=1.0):
 		for _ in range(iters):
 			simulate(s, d, mdp.pi0)
 		return max([(Q[(s,a)], a) for a in mdp.actions(s)])[1] # argmax
 
 	def simulate(s, d, pi0):
-		if d == 0 or mdp.isEnd(s): # typo in book ?
+		if mdp.isEnd(s):
 			return 0
+		if d == 0: # we stop exploring the tree, just estimate Qval here
+			return rollout(s, tMax, pi0)
 		if s not in Tree:
 			for a in mdp.actions(s):
 				Nsa[(s,a)], Ns[s], Q[(s,a)] =  0, 1, 0. # TODO use expert knowledge
 			Tree.add(s)
-			return rollout(s, d, pi0)
+			# use tMax instead of d: we want to rollout deeper
+			return rollout(s, tMax, pi0)
 
 		a = max([(Q[(s,a)]+c*math.sqrt(math.log(Ns[s])/(1e-5 + Nsa[(s,a)])), a) for a in mdp.actions(s)])[1] # argmax
 		sp, r = mdp.sampleSuccReward(s, a)
@@ -40,7 +44,7 @@ def mcts(mdp, depth=10, iters=10000, sort=False):
 		return q
 
 	def rollout(s, d, pi0):
-		if d == 0 or mdp.isEnd(s): # typo in book ?
+		if d == 0 or mdp.isEnd(s):
 			return 0
 		a = pi0(s)
 		sp, r = mdp.sampleSuccReward(s, a)
@@ -49,7 +53,12 @@ def mcts(mdp, depth=10, iters=10000, sort=False):
 	s = mdp.startState()
 	step = 1
 	while True:
-		a = selectAction(s, depth, iters)
+		if reuseTree is False:
+			Tree = set()
+			Nsa = {}
+			Ns = {}
+			Q = {}
+		a = selectAction(s, depth, iters, c)
 		#a = 'tram' # 'walk'
 		sp, r = mdp.sampleSuccReward(s, a)
 		print("Step {}: (s,a,r,sp)=({}, {}, {:.1f}, {})".format(step, s,a,r,sp))
