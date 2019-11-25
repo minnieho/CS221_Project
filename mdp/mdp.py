@@ -109,6 +109,7 @@ class ActMDP(object): # Anti Collision Tests problem
 		self.start = np.array([100.0,	0.0,  0.0,		20.0], dtype=float)
 		self.goal  = np.array([100.0, 200.0, 0.0, 0.0], dtype=float) # down from 200 to 50
 		self.start = self._randomStartState()
+		self.vdes = 20 # desired speed 20ms-1
 		self.gamma = discount
 
 	# stase is R44: 1 ego + 10 cars, 4 coordonates (x,y,vx,vy) each
@@ -184,6 +185,9 @@ class ActMDP(object): # Anti Collision Tests problem
 		#return smallest_TTC, smallest_TTC_obj
 		return smallest_TTC
 
+	def _get_vego(self, s):
+		return math.sqrt(s[2]**2+s[3]**2)
+
 	def _get_dist_nearest_obj(self, s):
 		nobjs = int(len(s)/4 - 1)
 		ego = s[0:4]
@@ -224,14 +228,23 @@ class ActMDP(object): # Anti Collision Tests problem
 			#sp[idx:idx+4] = mvNormal(mean, [1e-1, 1e-1, 1e-1, 1e-1]) # TODO sigma values
 			idx += 4
 
-		dist_nearest_obj = self._get_dist_nearest_obj(sp)
-		# collision or driving backward (negative speed)
-		if dist_nearest_obj < self.dist_collision or sp[3] < 0:
-			reward = -1000/1000
-		elif abs(action) >= 2:
-			reward = -2/1000
-		else:
-			reward = -1/1000
+		# dist_nearest_obj = self._get_dist_nearest_obj(sp)
+		# # collision or driving backward (negative speed)
+		# if dist_nearest_obj < self.dist_collision or sp[3] < 0:
+		# 	reward = -1000/1000
+		# elif abs(action) >= 2:
+		# 	reward = -2/1000
+		# else:
+		# 	reward = -1/1000
+
+		ttc = self._get_smallest_TTC(sp)
+		vego = self._get_vego(sp)
+		# make sure reward is in [0,1] for UCB-1
+		# take into account safety via ttc, efficiency via vego Comfort is missing
+		#reward = 1 - (0.9*math.exp(-ttc/10) + 0.1 * abs((vego-self.vdes)/self.vdes))
+		reward = 1 - math.exp(-ttc/10)
+		if reward == 1:
+			reward = 1 - abs((vego-self.vdes)/self.vdes)
 		return sp, reward
 
 	def actions(self, s):

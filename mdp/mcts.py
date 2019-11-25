@@ -11,7 +11,7 @@ from mdp import *
 # -------------------
 # Inference with MCTS
 # -------------------
-def mcts(mdp, depth=12, iters=100, explorConst=10.0, tMaxRollouts=200, reuseTree=True):
+def mcts(mdp, depth=12, iters=100, explorConst=1.0, tMaxRollouts=200, reuseTree=True):
 	Tree = set()
 	Nsa = {}
 	Ns = {}
@@ -66,8 +66,9 @@ def mcts(mdp, depth=12, iters=100, explorConst=10.0, tMaxRollouts=200, reuseTree
 		#a = 'tram' # 'walk'
 		sp, r = mdp.sampleSuccReward(s, a)
 		ttc = mdp._get_smallest_TTC(sp)
-		print("Step {}: ttc={:.2f} time={:.2f} sec (s,a,r,sp)=({}, {}, {:.1f}, {})".format(step, ttc, end-start, s,a,r,sp))
-		if r <= -1000:
+		#print("Step {}: ttc={:.2f} time={:.2f} sec (s,a,r,sp)=({}, {}, {:.1f}, {})".format(step, ttc, end-start, s,a,r,sp))
+		print("Step {}: ttc={:.2f} time={:.2f} sec (a,r,s,sp)=({}, {:.2f}, {}, {})".format(step, ttc, end-start, a,r,s,sp))
+		if r == 0:
 			pdb.set_trace()
 		step += 1
 		s = sp
