@@ -3,6 +3,7 @@ import os
 import random
 import math
 import pdb
+import time
 from mdp import *
 
 ## Inference (Algorithms)
@@ -10,7 +11,7 @@ from mdp import *
 # -------------------
 # Inference with MCTS
 # -------------------
-def mcts(mdp, depth=10, iters=100, explorConst=1.0, tMaxRollouts=200, reuseTree=True):
+def mcts(mdp, depth=12, iters=100, explorConst=10.0, tMaxRollouts=200, reuseTree=True):
 	Tree = set()
 	Nsa = {}
 	Ns = {}
@@ -18,7 +19,7 @@ def mcts(mdp, depth=10, iters=100, explorConst=1.0, tMaxRollouts=200, reuseTree=
 	c = explorConst # param controlling amount of exploration
 	tMax = tMaxRollouts # max steps used to estimate Qval via rollout
 
-	def selectAction(s, d=10, iters=100, c=1.0):
+	def selectAction(s, d, iters, c):
 		for _ in range(iters):
 			simulate(s, d, mdp.pi0)
 		return max([(Q[(s,a)], a) for a in mdp.actions(s)])[1] # argmax
@@ -54,14 +55,18 @@ def mcts(mdp, depth=10, iters=100, explorConst=1.0, tMaxRollouts=200, reuseTree=
 	step = 1
 	while True:
 		if reuseTree is False:
+			pdb.set_trace()
 			Tree = set()
 			Nsa = {}
 			Ns = {}
 			Q = {}
+		start = time.time()
 		a = selectAction(s, depth, iters, c)
+		end = time.time()
 		#a = 'tram' # 'walk'
 		sp, r = mdp.sampleSuccReward(s, a)
-		print("Step {}: (s,a,r,sp)=({}, {}, {:.1f}, {})".format(step, s,a,r,sp))
+		ttc = mdp._get_smallest_TTC(sp)
+		print("Step {}: ttc={:.2f} time={:.2f} sec (s,a,r,sp)=({}, {}, {:.1f}, {})".format(step, ttc, end-start, s,a,r,sp))
 		if r <= -1000:
 			pdb.set_trace()
 		step += 1

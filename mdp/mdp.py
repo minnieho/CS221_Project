@@ -99,7 +99,7 @@ def mvNormal(mean, sigma):
 class ActMDP(object): # Anti Collision Tests problem
 	# actions are accelerations
 	#def __init__(self, nobjs=10, dist_collision=10, dt=0.25, actions=[-4., -2., -1., 0., +1., +2.]):
-	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-2., -1., 0., +1., +2.], discount=0.9, restrict_actions=True):
+	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-2., -1., 0., +1., +2.], discount=1, restrict_actions=True):
 		self.nobjs = nobjs
 		self.dist_collision = dist_collision
 		self.dt = dt
@@ -168,8 +168,8 @@ class ActMDP(object): # Anti Collision Tests problem
 			t2 = np.inf
 		return min(t1, t2)
 
-	def _get_smallest_TTC(self, s, dist_collision):
-		radius = dist_collision
+	def _get_smallest_TTC(self, s):
+		radius = self.dist_collision
 		ego = s[0:4]
 		smallest_TTC = np.Inf
 		smallest_TTC_obj = -1
@@ -236,16 +236,17 @@ class ActMDP(object): # Anti Collision Tests problem
 
 	def actions(self, s):
 		if self.restrict_actions:
-			sTTC = self._get_smallest_TTC(s, self.dist_collision)
+			sTTC = self._get_smallest_TTC(s)
 			#print("sTTC {}".format(sTTC))
 			safe_action_set = []
 			spTTC_set = []
 			for a in self.action_set:
 				sp, r = self._step(s, a)
-				spTTC = self._get_smallest_TTC(sp, self.dist_collision)
+				spTTC = self._get_smallest_TTC(sp)
 				spTTC_set.append((spTTC, a))
 				#print("spTTC {}".format(spTTC))
-				if spTTC >= 10 or (spTTC < 10 and spTTC > sTTC):
+				#if spTTC >= 10 or (spTTC < 10 and spTTC > sTTC):
+				if spTTC >= sTTC:
 					safe_action_set.append(a)
 
 			if safe_action_set == []:
@@ -254,6 +255,7 @@ class ActMDP(object): # Anti Collision Tests problem
 				return [max(spTTC_set)[1]] # make it iterable => array single elt
 				#return self.action_set
 			else:
+				#print("SAFE ACTIONS !!!")
 				return safe_action_set
 		else:
 			return self.action_set
