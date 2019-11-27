@@ -130,7 +130,7 @@ class Agent():
 			self.dqn_target.load_state_dict(self.dqn_local.state_dict())
 
 
-def dqn(mdp, n_episodes=500, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
+def dqn(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
 
 	agent = Agent(mdp.state_size(), mdp.action_size(), mdp.discount(), seed=0)
 
