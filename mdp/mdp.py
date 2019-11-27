@@ -99,7 +99,8 @@ def mvNormal(mean, sigma):
 class ActMDP(object): # Anti Collision Tests problem
 	# actions are accelerations
 	#def __init__(self, nobjs=10, dist_collision=10, dt=0.25, actions=[-4., -2., -1., 0., +1., +2.]):
-	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-2., -1., 0., +1., +2.], discount=1, restrict_actions=True):
+	# NOTE: adding action -4. because sometimes it is impossible to avoid collisions without stronger braking
+	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-4., -2., -1., 0., +1., +2.], discount=1, restrict_actions=True):
 		self.nobjs = nobjs
 		self.dist_collision = dist_collision
 		self.dt = dt
@@ -242,10 +243,10 @@ class ActMDP(object): # Anti Collision Tests problem
 		# make sure reward is in [0,1] for UCB-1
 		# take into account safety via ttc, efficiency via vego Comfort is missing
 		#reward = 1 - (0.9*math.exp(-ttc/10) + 0.1 * abs((vego-self.vdes)/self.vdes))
-		reward = 1 - math.exp(-ttc/10)
+		reward = 1 - math.exp(-ttc/100) # /100 instead /10 to penalize even more risky ttc
 		if reward == 1:
 			reward = 1 - abs((vego-self.vdes)/self.vdes)
-		return sp, reward
+		return sp, reward-1 # reward in [-1,0] or [0,1] ? with [-1,0] easier to track the learning trend
 
 	def actions(self, s):
 		if self.restrict_actions:
@@ -290,6 +291,11 @@ class ActMDP(object): # Anti Collision Tests problem
 
 	def pi0(self, s):
 		return 0. # no accel, no decel
+
+	def action_size(self):
+		return len(self.action_set)
+	def state_size(self):
+		return len(self.start)
 
 	# TODO add piBaseline
 
