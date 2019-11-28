@@ -75,10 +75,10 @@ class QLearningAlgorithm(util.RLAlgorithm):
 	# Note that if s is a terminal state, then s' will be None.  Remember to check for this.
 	# You should update the weights using self.getStepSize(); use
 	# self.getQ() to compute the current estimate of the parameters.
-	def incorporateFeedback(self, state, action, reward, newState):
+	def incorporateFeedback(self, state, action, reward, newState, done=False):
 		# BEGIN_YOUR_CODE (our solution is 9 lines of code, but don't worry if you deviate from this)
 		#print("max of None: {}".format(max([self.getQ(None, a) for a in self.actions(None)])))
-		if newState is None:
+		if newState is None or done:
 			error = self.getQ(state, action) - reward
 		else:
 			error = self.getQ(state, action) - (reward + self.discount * max([self.getQ(newState, a) for a in self.actions(newState)]))
@@ -121,7 +121,7 @@ def qlearning(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, ep
 			done = mdp.isEnd(sp)
 
 			#agent.step(s, a, r, sp, done)
-			rl.incorporateFeedback(s, a, r, sp)
+			rl.incorporateFeedback(s, a, r, sp, done)
 
 			ttc = mdp._get_smallest_TTC(sp)
 			#print("Step {}: ttc={:.5f} (a,r,sp)=({}, {:.5f}, {})".format(t, ttc, a,r,sp[0:4]))
