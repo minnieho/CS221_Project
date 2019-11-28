@@ -89,9 +89,12 @@ class QLearningAlgorithm(util.RLAlgorithm):
 
 def simpleFeatureExtractor(state, action, mdp):
 	features = []
-	features.append(('pos', state[1]))
-	features.append(('speed', state[3]))
-	features.append(('ttc', mdp._get_smallest_TTC(state)))
+	pos, speed, ttc = state[1], state[3], mdp._get_smallest_TTC(state)
+	# normalize features, otherwise it does not work at all
+	ttc = min(ttc,100)
+	features.append(('pos', pos/200))
+	features.append(('speed', speed/30))
+	features.append(('ttc', ttc/100))
 	return features
 
 
