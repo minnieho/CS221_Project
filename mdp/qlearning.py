@@ -8,6 +8,7 @@ import util
 
 BUFFER_SIZE = int(1e5)
 BATCH_SIZE = 4
+LR = 5e-4
 
 class ReplayBuffer:
 	def __init__(self, buffer_size, batch_size, seed):
@@ -62,6 +63,7 @@ class QLearningAlgorithm(util.RLAlgorithm):
 	# Call this function to get the step size to update the weights.
 	def getStepSize(self):
 		return 1.0 / math.sqrt(self.numIters)
+		return LR
 
 	# We will call this function with (s, a, r, s'), which you should use to update |weights|.
 	# Note that if s is a terminal state, then s' will be None.  Remember to check for this.
@@ -72,27 +74,46 @@ class QLearningAlgorithm(util.RLAlgorithm):
 			error = self.getQ(state, action) - reward
 		else:
 			error = self.getQ(state, action) - (reward + self.discount * max([self.getQ(newState, a) for a in self.actions(newState)]))
+		#print("error={}".format(error))
+		#error = min(1, error)
+		#error = max(-1, error)
 		error *= self.getStepSize()
 		for f, v in self.featureExtractor(state, action, self.mdp):
 			self.weights[f] = self.weights[f] - error * v
 
-def simpleFeatureExtractor(state, action, mdp):
+def actFeatureExtractor(state, action, mdp):
 	features = []
 	pos, speed, ttc = state[1], state[3], mdp._get_smallest_TTC(state)
+	features.append(('ttcR', 1 - math.exp(-ttc/100.)))
+	features.append(('speedR', 1 - abs((speed-20.)/20.)))
+
 	# normalize features, otherwise it does not work at all
 	ttc = min(ttc,100)
-	features.append(('pos', pos/200))
-	features.append(('speed', speed/30))
-	features.append(('ttc', ttc/100))
+	pos, speed, ttc = pos/200, speed/30, ttc/100
+
+	# raw features
+	features.append(('pos', pos))
+	features.append(('speed', speed))
+	features.append(('ttc', ttc))
+	features.append(('bias', 1))
+
+	# quadratic features
+	features.append(('pos2', pos**2))
+	features.append(('speed2', speed**2))
+	features.append(('ttc2', ttc**2))
+
+	# action feature
 	features.append((math.copysign(1,action), 1))
 	#features.append(('action', math.copysign(1,action)))
+	#features.append((action, 1))
+
 	return features
 
 
 
 def qlearning(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
 
-	rl = QLearningAlgorithm(mdp.actions, mdp.discount(), simpleFeatureExtractor, mdp, 0.2)
+	rl = QLearningAlgorithm(mdp.actions, mdp.discount(), actFeatureExtractor, mdp, 0.2)
 	memory = ReplayBuffer(BUFFER_SIZE, batch_size=BATCH_SIZE, seed=0)
 
 	scores_window = deque(maxlen=100) # last 100 scores
