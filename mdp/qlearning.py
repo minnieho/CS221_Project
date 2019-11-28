@@ -53,9 +53,10 @@ class QLearningAlgorithm(util.RLAlgorithm):
 	# This algorithm will produce an action given a state.
 	# Here we use the epsilon-greedy algorithm: with probability
 	# |explorationProb|, take a random action.
-	def getAction(self, state):
+	def getAction(self, state, eps):
 		self.numIters += 1
-		if random.random() < self.explorationProb:
+		#if random.random() < self.explorationProb:
+		if random.random() < eps: # align qlearning and dqn exploration strategy
 			return random.choice(self.actions(state))
 		else:
 			return max((self.getQ(state, action), action) for action in self.actions(state))[1]
@@ -111,7 +112,7 @@ def actFeatureExtractor(state, action, mdp):
 
 
 
-def qlearning(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
+def qlearning(mdp, n_episodes=50000, max_t=1000, eps_start=0.2, eps_end=0.01, eps_decay=0.999):
 
 	rl = QLearningAlgorithm(mdp.actions, mdp.discount(), actFeatureExtractor, mdp, 0.2)
 	memory = ReplayBuffer(BUFFER_SIZE, batch_size=BATCH_SIZE, seed=0)
@@ -123,7 +124,7 @@ def qlearning(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, ep
 		score = 0
 		for t in range(max_t):
 			#a = agent.act(s, eps)
-			a = rl.getAction(s)
+			a = rl.getAction(s, eps)
 
 			#pdb.set_trace()
 			sp, r = mdp.sampleSuccReward(s, a)
