@@ -115,6 +115,11 @@ class ActMDP(object): # Anti Collision Tests problem
 		self.start = self._randomStartState()
 		self.vdes = 20 # desired speed 20ms-1
 		self.gamma = discount
+		self.reachable_states = []
+		depth = 5
+		print("Expand MDP states: for a depth of {} ...".format(depth))
+		self._expand(self.start, depth)
+		print("Expand MDP states: expanded {} states".format(len(self.reachable_states)))
 
 	# stase is R44: 1 ego + 10 cars, 4 coordonates (x,y,vx,vy) each
 	def _randomStartState(self):
@@ -282,9 +287,26 @@ class ActMDP(object): # Anti Collision Tests problem
 		else:
 			return self.action_set
 
+	def _expand(self, s, d):
+		self.reachable_states.append(tuple(s)) # tuple to make it hashable
+		if d == 0:
+			return
+		for a in self.actions(s):
+			sp, r = self._step(s, a)
+			self._expand(sp, d-1)
+
+	def states(self):
+		return self.reachable_states
+
 	def succProbReward(self, s, a):
 		# we can't return a list
-		raise NotImplementedError("Continuous state space")
+		#raise NotImplementedError("Continuous state space")
+		# Running on a subset of states with a single transition per state ... 
+		# returns sp, proba=T(s,a,sp), R(s,a,sp) 
+		results = []
+		sp, r = self._step(s, a)
+		results.append((tuple(sp), 1., r))
+		return results
 
 	def sampleSuccReward(self, s, a): # G(s,a) for mcts or Q-learning
 		sp, r = self._step(s, a)
