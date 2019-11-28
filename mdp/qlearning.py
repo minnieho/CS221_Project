@@ -10,7 +10,7 @@ import json
 import pprint
 
 BUFFER_SIZE = int(1e5)
-BATCH_SIZE = 4
+BATCH_SIZE = 1
 LR = 5e-4
 
 class ReplayBuffer:
@@ -66,7 +66,7 @@ class QLearningAlgorithm(util.RLAlgorithm):
 
 	# Call this function to get the step size to update the weights.
 	def getStepSize(self):
-		#return 1.0 / math.sqrt(self.numIters)
+		return 1e-4 / math.sqrt(self.numIters)
 		return LR
 
 	# We will call this function with (s, a, r, s'), which you should use to update |weights|.
@@ -91,66 +91,41 @@ class QLearningAlgorithm(util.RLAlgorithm):
 
 def actFeatureExtractor(state, action, mdp):
 	features = []
-	pos, speed, ttc_info = state[1], state[3], mdp._get_smallest_TTC(state)
 
+	order = 4 # polynomial approx
+
+	dmax = 200
+	vmax = 30
+	amax = 2
+	ttcmax = 100
+
+	pos, speed, ttc_info = state[1], state[3], mdp._get_smallest_TTC(state)
 	ttc, nobj = ttc_info
 	idx = 4+nobj*4
 	ttcX, ttcY, ttcVx, ttcVy = state[idx:idx+4]
-	ttcX, ttcY, ttcVx, ttcVy = ttcX/200, ttcY/200, ttcVx/30, ttcVy/30
+	ttcX, ttcY, ttcVx, ttcVy = ttcX/dmax, ttcY/dmax, ttcVx/vmax, ttcVy/vmax
+
+	features.append(('bias', 1))
 
 	# NB: trying to play with these features. I had to lower donw the learning rate (cf LR)
-	features.append(('ttcX', ttcX))
-	features.append(('ttcY', ttcY))
-	features.append(('ttcVx', ttcVx))
-	features.append(('ttcVy', ttcVy))
-
-	features.append(('ttcX2', ttcX**2))
-	features.append(('ttcY2', ttcY**2))
-	features.append(('ttcVx2', ttcVx**2))
-	features.append(('ttcVy2', ttcVy**2))
+	for i in range(1,order+1):
+		features.append(('ttcX'+str(i), ttcX**i))
+		features.append(('ttcY'+str(i), ttcY**i))
+		features.append(('ttcVx'+str(i), ttcVx**i))
+		features.append(('ttcVy'+str(i), ttcVy**i))
 
 	#features.append(('ttcR', 1 - math.exp(-ttc/100.)))
 	#features.append(('speedR', 1 - abs((speed-20.)/20.)))
 
 	# normalize features, otherwise it does not work at all
-	ttc = min(ttc,100)
-	pos, speed, ttc, action = pos/200, speed/30, ttc/100, action/2
+	ttc = min(ttc,ttcmax)
+	pos, speed, ttc, action = pos/dmax, speed/vmax, ttc/ttcmax, action/amax
 
-	# raw features
-	features.append(('pos', pos))
-	features.append(('speed', speed))
-	#features.append(('ttc', ttc))
-	#features.append(('ttc'+str(int(ttc)), 1))
-	features.append(('bias', 1))
-
-	# quadratic features
-	features.append(('pos2', pos**2))
-	features.append(('speed2', speed**2))
-	#features.append(('ttc2', ttc**2))
-
-	# action feature
-	#features.append((math.copysign(1,action), 1))
-	#features.append(('action', math.copysign(1,action)))
-	#features.append(('action'+str(action), 1))
-	#features.append((action, 1))
-	features.append(('action', action))
-	features.append(('action2', action**2))
-
-	idx = 0
-	#for i in range(mdp.nobjs):
-	for i in range(0):
-		x, y, vx, vy = state[idx:idx+4]
-		x, y, vx, vy = x/200, y/200, vx/30, vy/30 # normalize
-		features.append(('xCar'+str(i),   x))
-		features.append(('yCar'+str(i),   y))
-		features.append(('vxCar'+str(i), vx))
-		features.append(('vyCar'+str(i), vy))
-
-		features.append(('x2Car'+str(i),   x**2))
-		features.append(('y2Car'+str(i),   y**2))
-		features.append(('vx2Car'+str(i), vx**2))
-		features.append(('vy2Car'+str(i), vy**2))
-		idx += 4
+	for i in range(1,order+1):
+		features.append(('pos'+str(i), pos**i))
+		features.append(('speed'+str(i), speed**i))
+		features.append(('ttc'+str(i), ttc**i))
+		features.append(('action'+str(i), action**i))
 
 	return features
 
