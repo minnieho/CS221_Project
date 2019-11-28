@@ -96,7 +96,7 @@ def simpleFeatureExtractor(state, action, mdp):
 
 
 
-def dqn(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
+def qlearning(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
 
 	rl = QLearningAlgorithm(mdp.actions, mdp.discount(), simpleFeatureExtractor, mdp, 0.2)
 
@@ -132,4 +132,4 @@ def dqn(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_deca
 
 
 mdp = ActMDP()
-dqn(mdp)
+qlearning(mdp)
