@@ -53,7 +53,6 @@ class QLearningAlgorithm(util.RLAlgorithm):
 	def getQ(self, state, action):
 		score = 0
 		for f, v in self.featureExtractor(state, action, self.mdp):
-			#pdb.set_trace()
 			score += self.weights[f] * v
 		return score
 
@@ -95,6 +94,8 @@ def simpleFeatureExtractor(state, action, mdp):
 	features.append(('pos', pos/200))
 	features.append(('speed', speed/30))
 	features.append(('ttc', ttc/100))
+	features.append((math.copysign(1,action), 1))
+	#features.append(('action', math.copysign(1,action)))
 	return features
 
 
@@ -107,7 +108,6 @@ def qlearning(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, ep
 	eps = eps_start
 	for i_episode in range(1, n_episodes+1):
 		s = mdp.startState()
-		s = np.array(s) # convert tuple to np.array
 		score = 0
 		for t in range(max_t):
 			#a = agent.act(s, eps)
@@ -115,9 +115,6 @@ def qlearning(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, ep
 
 			#pdb.set_trace()
 			sp, r = mdp.sampleSuccReward(s, a)
-			if r < -1:
-				pdb.set_trace()
-			sp = np.array(sp) # convert tuple to np.array
 			done = mdp.isEnd(sp)
 
 			#agent.step(s, a, r, sp, done)
