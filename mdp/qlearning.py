@@ -7,28 +7,21 @@ import pdb
 import util
 
 BUFFER_SIZE = int(1e5)
+BATCH_SIZE = 4
 
 class ReplayBuffer:
 	def __init__(self, buffer_size, batch_size, seed):
 		self.memory = deque(maxlen=buffer_size)
 		self.batch_size = batch_size
-		self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
 		self.seed = random.seed(seed)
 
 	def add(self, state, action, reward, next_state, done):
-		e = self.experience(state, action, reward, next_state, done)
+		e = (state, action, reward, next_state, done)
 		self.memory.append(e)
 
 	def sample(self):
 		experiences = random.sample(self.memory, k=self.batch_size)
-		states, actions, rewards, next_states, dones = [], [], [], [], []
-		for e in experiences:
-			states.append(e.state)
-			actions.append(e.action)
-			rewards.append(e.reward)
-			next_states.append(e.next_state)
-			dones.append(e.done)
-		return (states, actions, rewards, next_states, dones)
+		return experiences
 
 	def __len__(self):
 		return len(self.memory)
@@ -75,8 +68,6 @@ class QLearningAlgorithm(util.RLAlgorithm):
 	# You should update the weights using self.getStepSize(); use
 	# self.getQ() to compute the current estimate of the parameters.
 	def incorporateFeedback(self, state, action, reward, newState, done=False):
-		# BEGIN_YOUR_CODE (our solution is 9 lines of code, but don't worry if you deviate from this)
-		#print("max of None: {}".format(max([self.getQ(None, a) for a in self.actions(None)])))
 		if newState is None or done:
 			error = self.getQ(state, action) - reward
 		else:
@@ -84,7 +75,6 @@ class QLearningAlgorithm(util.RLAlgorithm):
 		error *= self.getStepSize()
 		for f, v in self.featureExtractor(state, action, self.mdp):
 			self.weights[f] = self.weights[f] - error * v
-		# END_YOUR_CODE
 
 def simpleFeatureExtractor(state, action, mdp):
 	features = []
@@ -103,6 +93,7 @@ def simpleFeatureExtractor(state, action, mdp):
 def qlearning(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
 
 	rl = QLearningAlgorithm(mdp.actions, mdp.discount(), simpleFeatureExtractor, mdp, 0.2)
+	memory = ReplayBuffer(BUFFER_SIZE, batch_size=BATCH_SIZE, seed=0)
 
 	scores_window = deque(maxlen=100) # last 100 scores
 	eps = eps_start
@@ -118,7 +109,14 @@ def qlearning(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, ep
 			done = mdp.isEnd(sp)
 
 			#agent.step(s, a, r, sp, done)
-			rl.incorporateFeedback(s, a, r, sp, done)
+			memory.add(s, a, r, sp, done)
+			if len(memory) > BATCH_SIZE:
+				samples = memory.sample()
+				for sample in samples:
+					state, action, reward, next_state, isDone = sample
+					rl.incorporateFeedback(state, action, reward, next_state, isDone)
+			else:
+				rl.incorporateFeedback(s, a, r, sp, done)
 
 			ttc = mdp._get_smallest_TTC(sp)
 			#print("Step {}: ttc={:.5f} (a,r,sp)=({}, {:.5f}, {})".format(t, ttc, a,r,sp[0:4]))
