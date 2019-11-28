@@ -66,7 +66,7 @@ class QLearningAlgorithm(util.RLAlgorithm):
 
 	# Call this function to get the step size to update the weights.
 	def getStepSize(self):
-		return 1.0 / math.sqrt(self.numIters)
+		#return 1.0 / math.sqrt(self.numIters)
 		return LR
 
 	# We will call this function with (s, a, r, s'), which you should use to update |weights|.
@@ -91,7 +91,24 @@ class QLearningAlgorithm(util.RLAlgorithm):
 
 def actFeatureExtractor(state, action, mdp):
 	features = []
-	pos, speed, ttc = state[1], state[3], mdp._get_smallest_TTC(state)
+	pos, speed, ttc_info = state[1], state[3], mdp._get_smallest_TTC(state)
+
+	ttc, nobj = ttc_info
+	idx = 4+nobj*4
+	ttcX, ttcY, ttcVx, ttcVy = state[idx:idx+4]
+	ttcX, ttcY, ttcVx, ttcVy = ttcX/200, ttcY/200, ttcVx/30, ttcVy/30
+
+	# NB: trying to play with these features. I had to lower donw the learning rate (cf LR)
+	features.append(('ttcX', ttcX))
+	features.append(('ttcY', ttcY))
+	features.append(('ttcVx', ttcVx))
+	features.append(('ttcVy', ttcVy))
+
+	features.append(('ttcX2', ttcX**2))
+	features.append(('ttcY2', ttcY**2))
+	features.append(('ttcVx2', ttcVx**2))
+	features.append(('ttcVy2', ttcVy**2))
+
 	#features.append(('ttcR', 1 - math.exp(-ttc/100.)))
 	#features.append(('speedR', 1 - abs((speed-20.)/20.)))
 
@@ -102,14 +119,14 @@ def actFeatureExtractor(state, action, mdp):
 	# raw features
 	features.append(('pos', pos))
 	features.append(('speed', speed))
-	features.append(('ttc', ttc))
+	#features.append(('ttc', ttc))
 	#features.append(('ttc'+str(int(ttc)), 1))
 	features.append(('bias', 1))
 
 	# quadratic features
 	features.append(('pos2', pos**2))
 	features.append(('speed2', speed**2))
-	features.append(('ttc2', ttc**2))
+	#features.append(('ttc2', ttc**2))
 
 	# action feature
 	#features.append((math.copysign(1,action), 1))
@@ -176,11 +193,10 @@ def qlearning(mdp, n_episodes=50000, max_t=1000, eps_start=0.2, eps_end=0.01, ep
 		scores_window.append(score)
 		eps = max(eps_end, eps_decay*eps)
 		avg_sliding_score = np.mean(scores_window)
+		print("Episode {} Average sliding score: {:.2f}".format(i_episode, avg_sliding_score))
 		if avg_sliding_score > -10:
 			weightsFile.write("Episode {} Average sliding score: {:.2f}\n".format(i_episode, avg_sliding_score))
 			rl.dumpWeights()
-		else:
-			print("Episode {} Average sliding score: {:.2f}".format(i_episode, avg_sliding_score))
 
 
 weightsFile = open("qlearning.weights", "a")

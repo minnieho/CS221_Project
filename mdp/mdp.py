@@ -186,8 +186,7 @@ class ActMDP(object): # Anti Collision Tests problem
 				smallest_TTC = TTC
 				smallest_TTC_obj = n
 			idx += 4
-		#return smallest_TTC, smallest_TTC_obj
-		return smallest_TTC
+		return smallest_TTC, smallest_TTC_obj
 
 	def _get_vego(self, s):
 		#return math.sqrt(s[2]**2+s[3]**2)
@@ -242,7 +241,7 @@ class ActMDP(object): # Anti Collision Tests problem
 		# else:
 		# 	reward = -1/1000
 
-		ttc = self._get_smallest_TTC(sp)
+		ttc, _ = self._get_smallest_TTC(sp)
 		vego = self._get_vego(sp)
 		if vego < 0:
 			reward = -1 # with raw Q-learning we end up with negative speeds => penalize this
@@ -259,13 +258,13 @@ class ActMDP(object): # Anti Collision Tests problem
 
 	def actions(self, s):
 		if self.restrict_actions:
-			sTTC = self._get_smallest_TTC(s)
+			sTTC, _ = self._get_smallest_TTC(s)
 			#print("sTTC {}".format(sTTC))
 			safe_action_set = []
 			spTTC_set = []
 			for a in self.action_set:
 				sp, r = self._step(s, a)
-				spTTC = self._get_smallest_TTC(sp)
+				spTTC, _ = self._get_smallest_TTC(sp)
 				spTTC_set.append((spTTC, a))
 				#print("spTTC {}".format(spTTC))
 				#if spTTC >= 10 or (spTTC < 10 and spTTC > sTTC):
