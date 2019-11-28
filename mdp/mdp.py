@@ -100,7 +100,10 @@ class ActMDP(object): # Anti Collision Tests problem
 	# actions are accelerations
 	#def __init__(self, nobjs=10, dist_collision=10, dt=0.25, actions=[-4., -2., -1., 0., +1., +2.]):
 	# NOTE: adding action -4. because sometimes it is impossible to avoid collisions without stronger braking
-	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-4., -2., -1., 0., +1., +2.], discount=1, restrict_actions=False):
+	#def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-4., -2., -1., 0., +1., +2.], discount=1, restrict_actions=False):
+
+	# Easier for qlearning.py (so we deal with something normalized between -1 and 1)
+	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-2., -1., 0., +1., +2.], discount=1, restrict_actions=False):
 		self.nobjs = nobjs
 		self.dist_collision = dist_collision
 		self.dt = dt

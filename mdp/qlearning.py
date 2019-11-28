@@ -6,6 +6,9 @@ from mdp import *
 import pdb
 import util
 
+import json
+import pprint
+
 BUFFER_SIZE = int(1e5)
 BATCH_SIZE = 4
 LR = 5e-4
@@ -82,20 +85,25 @@ class QLearningAlgorithm(util.RLAlgorithm):
 		for f, v in self.featureExtractor(state, action, self.mdp):
 			self.weights[f] = self.weights[f] - error * v
 
+	def dumpWeights(self):
+		pprint.pprint(json.loads(json.dumps(self.weights)), weightsFile)
+		#print(dict(self.weights))
+
 def actFeatureExtractor(state, action, mdp):
 	features = []
 	pos, speed, ttc = state[1], state[3], mdp._get_smallest_TTC(state)
-	features.append(('ttcR', 1 - math.exp(-ttc/100.)))
-	features.append(('speedR', 1 - abs((speed-20.)/20.)))
+	#features.append(('ttcR', 1 - math.exp(-ttc/100.)))
+	#features.append(('speedR', 1 - abs((speed-20.)/20.)))
 
 	# normalize features, otherwise it does not work at all
 	ttc = min(ttc,100)
-	pos, speed, ttc = pos/200, speed/30, ttc/100
+	pos, speed, ttc, action = pos/200, speed/30, ttc/100, action/2
 
 	# raw features
 	features.append(('pos', pos))
 	features.append(('speed', speed))
 	features.append(('ttc', ttc))
+	#features.append(('ttc'+str(int(ttc)), 1))
 	features.append(('bias', 1))
 
 	# quadratic features
@@ -104,9 +112,28 @@ def actFeatureExtractor(state, action, mdp):
 	features.append(('ttc2', ttc**2))
 
 	# action feature
-	features.append((math.copysign(1,action), 1))
+	#features.append((math.copysign(1,action), 1))
 	#features.append(('action', math.copysign(1,action)))
+	#features.append(('action'+str(action), 1))
 	#features.append((action, 1))
+	features.append(('action', action))
+	features.append(('action2', action**2))
+
+	idx = 0
+	#for i in range(mdp.nobjs):
+	for i in range(0):
+		x, y, vx, vy = state[idx:idx+4]
+		x, y, vx, vy = x/200, y/200, vx/30, vy/30 # normalize
+		features.append(('xCar'+str(i),   x))
+		features.append(('yCar'+str(i),   y))
+		features.append(('vxCar'+str(i), vx))
+		features.append(('vyCar'+str(i), vy))
+
+		features.append(('x2Car'+str(i),   x**2))
+		features.append(('y2Car'+str(i),   y**2))
+		features.append(('vx2Car'+str(i), vx**2))
+		features.append(('vy2Car'+str(i), vy**2))
+		idx += 4
 
 	return features
 
@@ -148,8 +175,14 @@ def qlearning(mdp, n_episodes=50000, max_t=1000, eps_start=0.2, eps_end=0.01, ep
 			s = sp
 		scores_window.append(score)
 		eps = max(eps_end, eps_decay*eps)
-		print("Episode {} Average sliding score: {:.2f}".format(i_episode, np.mean(scores_window)))
+		avg_sliding_score = np.mean(scores_window)
+		if avg_sliding_score > -10:
+			weightsFile.write("Episode {} Average sliding score: {:.2f}\n".format(i_episode, avg_sliding_score))
+			rl.dumpWeights()
+		else:
+			print("Episode {} Average sliding score: {:.2f}".format(i_episode, avg_sliding_score))
 
 
+weightsFile = open("qlearning.weights", "a")
 mdp = ActMDP()
 qlearning(mdp)
