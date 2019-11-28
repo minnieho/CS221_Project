@@ -100,7 +100,7 @@ class ActMDP(object): # Anti Collision Tests problem
 	# actions are accelerations
 	#def __init__(self, nobjs=10, dist_collision=10, dt=0.25, actions=[-4., -2., -1., 0., +1., +2.]):
 	# NOTE: adding action -4. because sometimes it is impossible to avoid collisions without stronger braking
-	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-4., -2., -1., 0., +1., +2.], discount=1, restrict_actions=True):
+	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-4., -2., -1., 0., +1., +2.], discount=1, restrict_actions=False):
 		self.nobjs = nobjs
 		self.dist_collision = dist_collision
 		self.dt = dt
@@ -187,7 +187,8 @@ class ActMDP(object): # Anti Collision Tests problem
 		return smallest_TTC
 
 	def _get_vego(self, s):
-		return math.sqrt(s[2]**2+s[3]**2)
+		#return math.sqrt(s[2]**2+s[3]**2)
+		return s[3]
 
 	def _get_dist_nearest_obj(self, s):
 		nobjs = int(len(s)/4 - 1)
@@ -240,13 +241,18 @@ class ActMDP(object): # Anti Collision Tests problem
 
 		ttc = self._get_smallest_TTC(sp)
 		vego = self._get_vego(sp)
-		# make sure reward is in [0,1] for UCB-1
-		# take into account safety via ttc, efficiency via vego Comfort is missing
-		#reward = 1 - (0.9*math.exp(-ttc/10) + 0.1 * abs((vego-self.vdes)/self.vdes))
-		reward = 1 - math.exp(-ttc/100) # /100 instead /10 to penalize even more risky ttc
-		if reward == 1:
-			reward = 1 - abs((vego-self.vdes)/self.vdes)
-		return sp, reward-1 # reward in [-1,0] or [0,1] ? with [-1,0] easier to track the learning trend
+		if vego < 0:
+			reward = -1 # with raw Q-learning we end up with negative speeds => penalize this
+		else:
+			# make sure reward is in [0,1] for UCB-1
+			# take into account safety via ttc, efficiency via vego Comfort is missing
+			#reward = 1 - (0.9*math.exp(-ttc/10) + 0.1 * abs((vego-self.vdes)/self.vdes))
+			reward = 1 - math.exp(-ttc/100) # /100 instead /10 to penalize even more risky ttc
+			if reward == 1:
+				reward = 1 - abs((vego-self.vdes)/self.vdes)
+			reward -= 1 # reward in [-1,0] or [0,1] ? with [-1,0] easier to track the learning trend
+
+		return sp, reward # reward in [-1,0] or [0,1] ? with [-1,0] easier to track the learning trend
 
 	def actions(self, s):
 		if self.restrict_actions:
