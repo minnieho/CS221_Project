@@ -50,6 +50,7 @@ def dynamicProgramming(problem):
 	minCost = recurse(problem.startState())
 
 	# recover history
+	print("n_states explored: {}".format(len(futureCost)))
 	history = []
 	s = problem.startState()
 	while not problem.isEnd(s):
@@ -94,7 +95,7 @@ def uniformCostSearch(problem):
 	history.reverse()
 	history = (minCost, history)
 	print("REVERSE HISTORY: ", history)
-
+	print("n_states explored: {}".format(len(explored)))
 
 
 # -------------
@@ -129,15 +130,15 @@ problem = TransportProblem(N=1000)
 # printBestPath(best)
 # print("backtrackingSearch time: {}".format(end-start))
 
-start = time.time()
-print(dynamicProgramming(problem))
-end = time.time()
-print("dynamicProgramming time: {} sec".format(end-start))
-
-start = time.time()
-uniformCostSearch(problem)
-end = time.time()
-print("uniformCostSearch time: {} sec".format(end-start))
+#start = time.time()
+#print(dynamicProgramming(problem))
+#end = time.time()
+#print("dynamicProgramming time: {} sec".format(end-start))
+#
+#start = time.time()
+#uniformCostSearch(problem)
+#end = time.time()
+#print("uniformCostSearch time: {} sec".format(end-start))
 
 random.seed(30)
 
@@ -147,7 +148,7 @@ print("start state: {}".format(start))
 print(problem.isEnd(start))
 
 start = time.time()
-#print(dynamicProgramming(problem))
-uniformCostSearch(problem)
+print(dynamicProgramming(problem))
+#uniformCostSearch(problem)
 end = time.time()
-print("DP time: {} sec".format(end-start))
+print("time: {} sec".format(end-start))
