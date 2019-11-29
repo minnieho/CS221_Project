@@ -54,10 +54,9 @@ class ReplayBuffer:
 	def __len__(self):
 		return len(self.memory)
 
-# DQN: start experiments with a simple DNN
-class DQN(nn.Module):
+class DNN(nn.Module):
 	def __init__(self, inputs=44, outputs=5):
-		super(DQN, self).__init__()
+		super(DNN, self).__init__()
 		self.fc1 = nn.Linear(inputs, 200)
 		self.fc2 = nn.Linear(200, 200)
 		self.fc3 = nn.Linear(200, outputs)
@@ -69,6 +68,40 @@ class DQN(nn.Module):
 		# XXX constrain the qvalues in [0,1] ???
 		return x
 
+class CNN(nn.Module):
+	def __init__(self, inputs=44, outputs=5):
+		super(CNN, self).__init__()
+		nfilters = 256
+		nfc = 200
+		# in_channels, out_channels, kernel_size, stride
+		self.conv1 = nn.Conv1d( 1, nfilters,  4, stride=4)
+		self.bn1 = nn.BatchNorm1d(nfilters)
+		self.conv2 = nn.Conv1d(nfilters, nfilters, 1, stride=1)
+		self.bn2 = nn.BatchNorm1d(nfilters)
+		self.maxpool = nn.MaxPool1d(10)
+		self.fc1 = nn.Linear(4+nfilters, nfc)
+		self.fc2 = nn.Linear(nfc, nfc)
+		self.fc3 = nn.Linear(nfc, outputs)
+
+	def forward(self, inputs):
+		#pdb.set_trace()
+		x = inputs[:, 4:]  # [4, 40]
+		x = x.unsqueeze(1) # [N=4, Cin=1, L=40]
+		x = F.relu(self.bn1(self.conv1(x))) # [N, 32, 10]
+		x = F.relu(self.bn2(self.conv2(x))) # [N, 32, 10]
+		x = self.maxpool(x) # [N, 32, 1]
+
+		x = x.view(x.shape[0], -1) # [N, 32]
+		ego = inputs[:, 0:4] # [N, 4]
+		enc = torch.cat((ego, x), 1) # [N, 36]
+
+		x = F.relu(self.fc1(enc))
+		x = F.relu(self.fc2(x))
+		x = self.fc3(x)
+		# XXX constrain the qvalues in [0,1] ???
+		return x
+
+
 
 class Agent():
 	def __init__(self, state_size, action_size, gamma, args, seed):
@@ -77,10 +110,15 @@ class Agent():
 		self.seed = random.seed(seed)
 		self.gamma = gamma
 		self.iters = 0
+		self.args = args
 
 		# Q-Network
-		self.dqn_local = DQN(state_size, action_size).to(device)
-		self.dqn_target = DQN(state_size, action_size).to(device)
+		if args.nn == 'cnn':
+			self.dqn_local = CNN(state_size, action_size).to(device)
+			self.dqn_target = CNN(state_size, action_size).to(device)
+		else:
+			self.dqn_local = DNN(state_size, action_size).to(device)
+			self.dqn_target = DNN(state_size, action_size).to(device)
 		self.optimizer = optim.Adam(self.dqn_local.parameters(), lr=LR)
 
 		if args.restore is not None:
@@ -91,7 +129,6 @@ class Agent():
 
 		# Replay memory
 		self.memory = ReplayBuffer(BUFFER_SIZE, BATCH_SIZE, seed)
-		# Initialize time step (for updating every UPDATE_EVERY steps)
 		self.t_step = 0
 
 	def step(self, s, a, r, sp, done):
@@ -122,7 +159,6 @@ class Agent():
 
 		Q_targets_next = self.dqn_target(next_states).max(1)[0].detach()
 		Q_targets = rewards + (self.gamma * Q_targets_next * (1 - dones))
-		#pdb.set_trace()
 
 		loss = F.mse_loss(Q_expected, Q_targets)
 
@@ -144,7 +180,7 @@ class Agent():
 		dt_string = now.strftime("%d-%m-%Y_%H:%M:%S")
 		#filename = 'dnnStep'+str(episode)+'Score'+"{:.2f}".format(mean_score)+'Date'+dt_string
 		#filename = 'dnnStep'+str(episode)+'Score'+"{:.2f}".format(mean_score)
-		filename = 'dnnDate'+dt_string+'Episode'+str(episode)+'Score'+"{:.2f}".format(mean_score)
+		filename = self.args.nn+'Date'+dt_string+'Episode'+str(episode)+'Score'+"{:.2f}".format(mean_score)
 		print("Save model {} with mean_score {}".format(filename, mean_score))
 		utils.save_checkpoint({'episode': episode,
 								'state_dict': self.dqn_local.state_dict(),
@@ -187,7 +223,7 @@ def dqn(mdp, args, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, ep
 		eps = max(eps_end, eps_decay*eps)
 		print("Episode {} Average sliding score: {:.2f}".format(i_episode, mean_score))
 
-# run python3 dqn.py or python3 dqn.py --restore best
+# run python3 dqn.py or python3 dqn.py --restore best or python3 dqn.py -nn cnn
 parser = argparse.ArgumentParser()
 parser.add_argument('--nn', default='dnn', help="dnn or cnn")
 parser.add_argument('--restore', default=None, help="Optional, file in models containing weights to reload before training")
