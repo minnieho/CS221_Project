@@ -10,6 +10,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+import utils_nn as utils
+import argparse
+from datetime import datetime
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 BUFFER_SIZE = int(1e5)
@@ -54,9 +58,9 @@ class ReplayBuffer:
 class DQN(nn.Module):
 	def __init__(self, inputs=44, outputs=5):
 		super(DQN, self).__init__()
-		self.fc1 = nn.Linear(inputs, 100)
-		self.fc2 = nn.Linear(100, 100)
-		self.fc3 = nn.Linear(100, outputs)
+		self.fc1 = nn.Linear(inputs, 200)
+		self.fc2 = nn.Linear(200, 200)
+		self.fc3 = nn.Linear(200, outputs)
 
 	def forward(self, x):
 		x = F.relu(self.fc1(x))
@@ -67,7 +71,7 @@ class DQN(nn.Module):
 
 
 class Agent():
-	def __init__(self, state_size, action_size, gamma, seed):
+	def __init__(self, state_size, action_size, gamma, args, seed):
 		self.state_size = state_size
 		self.action_size = action_size
 		self.seed = random.seed(seed)
@@ -78,6 +82,12 @@ class Agent():
 		self.dqn_local = DQN(state_size, action_size).to(device)
 		self.dqn_target = DQN(state_size, action_size).to(device)
 		self.optimizer = optim.Adam(self.dqn_local.parameters(), lr=LR)
+
+		if args.restore is not None:
+			restore_path = os.path.join('models/', args.restore + '.pth.tar')
+			print("Restoring parameters from {}".format(restore_path))
+			utils.load_checkpoint(restore_path, self.dqn_local, self.optimizer)
+			self.dqn_target.load_state_dict(self.dqn_local.state_dict())
 
 		# Replay memory
 		self.memory = ReplayBuffer(BUFFER_SIZE, BATCH_SIZE, seed)
@@ -129,11 +139,27 @@ class Agent():
 		if self.iters % TARGET_UPDATE == 0:
 			self.dqn_target.load_state_dict(self.dqn_local.state_dict())
 
+	def save(self, episode, mean_score, is_best=True):
+		now = datetime.now()
+		dt_string = now.strftime("%d-%m-%Y_%H:%M:%S")
+		#filename = 'dnnStep'+str(episode)+'Score'+"{:.2f}".format(mean_score)+'Date'+dt_string
+		#filename = 'dnnStep'+str(episode)+'Score'+"{:.2f}".format(mean_score)
+		filename = 'dnnDate'+dt_string+'Episode'+str(episode)+'Score'+"{:.2f}".format(mean_score)
+		print("Save model {} with mean_score {}".format(filename, mean_score))
+		utils.save_checkpoint({'episode': episode,
+								'state_dict': self.dqn_local.state_dict(),
+								'optim_dict' : self.optimizer.state_dict(),
+								'mean_score': mean_score},
+								is_best = True,
+								checkpoint = 'models/',
+								filename=filename)
 
-def dqn(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
 
-	agent = Agent(mdp.state_size(), mdp.action_size(), mdp.discount(), seed=0)
+def dqn(mdp, args, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
 
+	agent = Agent(mdp.state_size(), mdp.action_size(), mdp.discount(), args, seed=0)
+
+	best_mean_score = -math.inf
 	scores_window = deque(maxlen=100) # last 100 scores
 	eps = eps_start
 	for i_episode in range(1, n_episodes+1):
@@ -154,9 +180,19 @@ def dqn(mdp, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_deca
 				break
 			s = sp
 		scores_window.append(score)
+		mean_score = np.mean(scores_window)
+		if mean_score > best_mean_score:
+			agent.save(i_episode, mean_score)
+			best_mean_score = mean_score
 		eps = max(eps_end, eps_decay*eps)
-		print("Episode {} Average sliding score: {:.2f}".format(i_episode, np.mean(scores_window)))
+		print("Episode {} Average sliding score: {:.2f}".format(i_episode, mean_score))
 
+# run python3 dqn.py or python3 dqn.py --restore best
+parser = argparse.ArgumentParser()
+parser.add_argument('--nn', default='dnn', help="dnn or cnn")
+parser.add_argument('--restore', default=None, help="Optional, file in models containing weights to reload before training")
+
+args = parser.parse_args()
 
 mdp = ActMDP()
-dqn(mdp)
+dqn(mdp, args)
