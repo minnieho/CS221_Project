@@ -9,7 +9,8 @@ import argparse
 # Work In Progress
 def train_dqn(mdp, args, n_epochs=100, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
 
-	agent = Agent(mdp.state_size(), mdp.action_size(), mdp.discount(), args, seed=0)
+	#agent = Agent(mdp.state_size(), mdp.action_size(), mdp.discount(), args, seed=0)
+	agent = Agent(7, mdp.action_size(), mdp.discount(), args, seed=0)
 
 	mean_score = -math.inf
 	avg_tr_loss = 0
@@ -21,10 +22,10 @@ def train_dqn(mdp, args, n_epochs=100, n_episodes=50000, max_t=1000, eps_start=1
 			score = 0
 			for t in range(max_t):
 				iters += 1
-				a = agent.act(mdp.normalize_state(s), eps) # a is an index !!!
+				a = agent.act(mdp.reduce_state(s), eps) # a is an index !!!
 				sp, r = mdp.sampleSuccReward(s, a, actionIndex=True) # a is an index !!!
 				done = mdp.isEnd(sp)
-				l = agent.step(mdp.normalize_state(s), a, r, mdp.normalize_state(sp), done) # a is an index !!!
+				l = agent.step(mdp.reduce_state(s), a, r, mdp.reduce_state(sp), done) # a is an index !!!
 				if l is not None:
 					avg_tr_loss += l.item()
 				ttc, _ = mdp._get_smallest_TTC(sp)
@@ -43,7 +44,7 @@ def train_dqn(mdp, args, n_epochs=100, n_episodes=50000, max_t=1000, eps_start=1
 		for num_s, s in enumerate(mdp.dev()):
 			score = 0
 			for t in range(max_t):
-				a = agent.act(mdp.normalize_state(s), eps=0.) # a is an index !!!
+				a = agent.act(mdp.reduce_state(s), eps=0.) # a is an index !!!
 				sp, r = mdp.sampleSuccReward(s, a, actionIndex=True) # a is an index !!!
 				done = mdp.isEnd(sp)
 				score += r
@@ -61,10 +62,10 @@ def train_dqn(mdp, args, n_epochs=100, n_episodes=50000, max_t=1000, eps_start=1
 	#	s = mdp.startState()
 	#	score = 0
 	#	for t in range(max_t):
-	#		a = agent.act(mdp.normalize_state(s), eps) # Acthung: a is an index in the action set !!!
+	#		a = agent.act(mdp.reduce_state(s), eps) # Acthung: a is an index in the action set !!!
 	#		sp, r = mdp.sampleSuccReward(s, a, actionIndex=True) # BUG FIX !!! a is an index
 	#		done = mdp.isEnd(sp)
-	#		l = agent.step(mdp.normalize_state(s), a, r, mdp.normalize_state(sp), done) # Achtung: a is an index in the action set !!!
+	#		l = agent.step(mdp.reduce_state(s), a, r, mdp.reduce_state(sp), done) # Achtung: a is an index in the action set !!!
 	#		ttc, _ = mdp._get_smallest_TTC(sp)
 	#		score += r
 	#		if done:

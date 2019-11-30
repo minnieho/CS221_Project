@@ -315,6 +315,26 @@ class ActMDP(object): # Anti Collision Tests problem
 	def states(self):
 		return self.reachable_states
 
+
+	def reduce_state(self, s):
+		features = []
+		dmax = 200.
+		vmax = 30.
+		ttcmax = 100.
+
+		pos, speed, ttc_info = s[1], s[3], self._get_smallest_TTC(s)
+		ttc, nobj = ttc_info
+		idx = 4+nobj*4
+		ttcX, ttcY, ttcVx, ttcVy = s[idx:idx+4]
+		ttcX, ttcY, ttcVx, ttcVy = ttcX/dmax, ttcY/dmax, ttcVx/vmax, ttcVy/vmax
+
+		ttc = min(ttc,ttcmax)
+		pos, speed, ttc = pos/dmax, speed/vmax, ttc/ttcmax
+
+		features = [pos, speed, ttc, ttcX, ttcY, ttcVx, ttcVy]
+		nstate = np.array(features)
+		return nstate
+
 	def normalize_state(self, s):
 		dmax = 200.
 		vmax = 30.
@@ -324,7 +344,7 @@ class ActMDP(object): # Anti Collision Tests problem
 			ns[i*4+1] = s[i*4+1]/dmax
 			ns[i*4+2] = s[i*4+2]/vmax
 			ns[i*4+3] = s[i*4+3]/vmax
-		return ns
+		return ns # Too Complex
 
 	def succProbReward(self, s, a, actionIndex=False):
 		if actionIndex:
