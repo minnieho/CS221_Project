@@ -298,7 +298,9 @@ class ActMDP(object): # Anti Collision Tests problem
 	def states(self):
 		return self.reachable_states
 
-	def succProbReward(self, s, a):
+	def succProbReward(self, s, a, actionIndex=False):
+		if actionIndex:
+			a = self.action_set[a] # convert action index to action value (bugfix for DQN)
 		# we can't return a list
 		#raise NotImplementedError("Continuous state space")
 		# Running on a subset of states with a single transition per state ... 
@@ -308,7 +310,9 @@ class ActMDP(object): # Anti Collision Tests problem
 		results.append((tuple(sp), 1., r))
 		return results
 
-	def sampleSuccReward(self, s, a): # G(s,a) for mcts or Q-learning
+	def sampleSuccReward(self, s, a, actionIndex=False): # G(s,a) for mcts or Q-learning
+		if actionIndex:
+			a = self.action_set[a] # convert action index to action value (bugfix for DQN)
 		sp, r = self._step(s, a)
 		return (tuple(sp), r) # make the state hashable
 

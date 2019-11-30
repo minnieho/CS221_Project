@@ -31,11 +31,11 @@ def dqn(mdp, args, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, ep
 		s = np.array(s) # convert tuple to np.array
 		score = 0
 		for t in range(max_t):
-			a = agent.act(s, eps)
-			sp, r = mdp.sampleSuccReward(s, a)
+			a = agent.act(s, eps) # Acthung: a is an index in the action set !!!
+			sp, r = mdp.sampleSuccReward(s, a, actionIndex=True) # BUG FIX !!! a is an index
 			sp = np.array(sp) # convert tuple to np.array
 			done = mdp.isEnd(sp)
-			agent.step(s, a, r, sp, done)
+			agent.step(s, a, r, sp, done) # Achtung: a is an index in the action set !!!
 
 			ttc, _ = mdp._get_smallest_TTC(sp)
 			#if best_mean_score > -10:

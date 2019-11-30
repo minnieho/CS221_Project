@@ -16,7 +16,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 BUFFER_SIZE = int(1e5)
 BATCH_SIZE = 4 # 64
-TARGET_UPDATE = 10 # update target network every ...
+TARGET_UPDATE = 100 # update target network every ... TODO TO BE TUNED
 LR = 5e-4
 
 
@@ -135,6 +135,7 @@ class Agent():
 			experiences = self.memory.sample()
 			self.learn(experiences)
 
+	# ACHTUNG: act returns action INDEX !!!
 	def act(self, state, eps=0.):
 		# tuple to np.array to torch, use float, add batch dim and move to gpu
 		state = torch.from_numpy(state).float().unsqueeze(0).to(device)
