@@ -57,7 +57,7 @@ def dqn(mdp, args, n_epochs=5, n_episodes=50000, max_t=1000, eps_start=1.0, eps_
 		scores_window.append(score)
 		mean_score = np.mean(scores_window)
 		if i_episode > 100 and mean_score > best_mean_score:
-			agent.save(i_episode, mean_score)
+			#agent.save(i_episode, mean_score)
 			best_mean_score = mean_score
 		eps = max(eps_end, eps_decay*eps)
 		print("Episode {} Average sliding score: {:.2f}".format(i_episode, mean_score))
