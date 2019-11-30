@@ -189,3 +189,23 @@ class Agent():
 								checkpoint = 'models/',
 								filename=filename)
 
+	def getV(self, state):
+		# unsqueeze to add the BatchDim (1 in this case)
+		state = torch.from_numpy(state).float().unsqueeze(0).to(device)
+		self.dqn_local.eval()
+		with torch.no_grad():
+			qvalues = self.dqn_local(state)
+		qvalues = qvalues.cpu().numpy() # [BatchDim=1, 5]
+		Vs = np.max(qvalues[0,:])
+		return Vs
+
+	def getQ(self, state, a): # a is an INDEX
+		# unsqueeze to add the BatchDim (1 in this case)
+		state = torch.from_numpy(state).float().unsqueeze(0).to(device)
+		self.dqn_local.eval()
+		with torch.no_grad():
+			qvalues = self.dqn_local(state)
+		qvalues = qvalues.cpu().numpy() # [BatchDim=1, 5]
+		Qsa = qvalues[0,a]
+		return Qsa
+

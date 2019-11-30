@@ -287,6 +287,9 @@ class ActMDP(object): # Anti Collision Tests problem
 		else:
 			return self.action_set
 
+	def action_index(self, action):
+		return self.action_set.index(action)
+
 	def _expand(self, s, d):
 		self.reachable_states.append(tuple(s)) # tuple to make it hashable
 		if d == 0:

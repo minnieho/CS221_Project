@@ -98,4 +98,12 @@ nnet = dqn.Agent(mdp.state_size(), mdp.action_size(), mdp.discount(), args, seed
 print("Loading dqn agent: done (not used yet)".format(args.restore))
 #pdb.set_trace()
 
+s = mdp.startState()
+s = np.array(s) # converts list (hashable for dict) to np.array usable for torch
+ttc, _ = mdp._get_smallest_TTC(s)
+print("V(startState)={}, ttc={} speed={}".format(nnet.getV(s), ttc, s[3]))
+for action in mdp.actions(s):
+	a = mdp.action_index(action)
+	print("Q(startState, {})={}".format(action, nnet.getQ(s,a)))
+
 mcts(mdp)
