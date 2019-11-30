@@ -16,7 +16,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 BUFFER_SIZE = int(1e5)
 BATCH_SIZE = 4 # 64
-TARGET_UPDATE = 100 # update target network every ... TODO TO BE TUNED
+TARGET_UPDATE = 100 # update target network every ... TODO TO BE TUNED 1000 looks OK
 LR = 5e-4
 
 
@@ -129,11 +129,14 @@ class Agent():
 		self.memory = ReplayBuffer(BUFFER_SIZE, BATCH_SIZE, seed)
 		self.t_step = 0
 
+	# return loss
 	def step(self, s, a, r, sp, done):
 		self.memory.add(s, a, r, sp, done)
 		if len(self.memory) > BATCH_SIZE:
 			experiences = self.memory.sample()
-			self.learn(experiences)
+			return self.learn(experiences)
+		else:
+			return None
 
 	# ACHTUNG: act returns action INDEX !!!
 	def act(self, state, eps=0.):
@@ -173,6 +176,8 @@ class Agent():
 		self.iters += 1
 		if self.iters % TARGET_UPDATE == 0:
 			self.dqn_target.load_state_dict(self.dqn_local.state_dict())
+
+		return loss
 
 	def save(self, episode, mean_score, is_best=True):
 		now = datetime.now()

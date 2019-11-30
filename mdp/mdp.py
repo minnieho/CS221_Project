@@ -111,7 +111,7 @@ class ActMDP(object): # Anti Collision Tests problem
 		self.action_set = action_set
 		self.restrict_actions = restrict_actions # will restrict actions(s) to safe_actions(s)
 		# x, y, vx, vy
-		self.start = np.array([100.0,	0.0,  0.0,		20.0], dtype=float)
+		self.startEgo = np.array([100.0,	0.0,  0.0,		20.0], dtype=float)
 		self.goal  = np.array([100.0, 200.0, 0.0, 0.0], dtype=float) # down from 200 to 50
 		self.start = self._randomStartState()
 		self.vdes = 20 # desired speed 20ms-1
@@ -137,7 +137,7 @@ class ActMDP(object): # Anti Collision Tests problem
 
 	# stase is R44: 1 ego + 10 cars, 4 coordonates (x,y,vx,vy) each
 	def _randomStartState(self):
-		state = copy.deepcopy(self.start)
+		state = copy.deepcopy(self.startEgo)
 		for n in range(int(self.nobjs/2)):
 			x = float(random.randint(0, 50))
 			y = float(random.randint(25, 190))

@@ -100,6 +100,10 @@ parser.add_argument('--nn', default='dnn', help="dnn or cnn")
 parser.add_argument('--restore', default='dnn', help="File in models containing weights to load for mcts nnet")
 args = parser.parse_args()
 
+if 'nn' in args.nn:
+	args.mcts = 'nnet'
+	args.restore = args.nn
+
 mdp = ActMDP()
 print("Loading dqn agent: models/{}.pth.tar ...".format(args.restore))
 nnet = dqn.Agent(mdp.state_size(), mdp.action_size(), mdp.discount(), args, seed=0)
