@@ -103,7 +103,8 @@ class ActMDP(object): # Anti Collision Tests problem
 	#def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-4., -2., -1., 0., +1., +2.], discount=1, restrict_actions=False):
 
 	# Easier for qlearning.py (so we deal with something normalized between -1 and 1)
-	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-2., -1., 0., +1., +2.], discount=1, restrict_actions=False):
+	def __init__(self, nobjs=10, dist_collision=10, dt=0.25, action_set=[-2., -1., 0., +1., +2.], discount=1, restrict_actions=False, seed=0):
+		self.seed = random.seed(seed)
 		self.nobjs = nobjs
 		self.dist_collision = dist_collision
 		self.dt = dt
@@ -120,6 +121,19 @@ class ActMDP(object): # Anti Collision Tests problem
 		print("Expand MDP states: for a depth of {} ...".format(depth))
 		self._expand(self.start, depth)
 		print("Expand MDP states: expanded {} states".format(len(self.reachable_states)))
+		self.create_validation_sets()
+
+	def create_validation_sets(self):
+		self.train_set = [self._randomStartState() for _ in range(8000)]
+		self.dev_set = [self._randomStartState() for _ in range(1000)]
+		self.test_set = [self._randomStartState() for _ in range(1000)]
+
+	def train(self):
+		return self.train_set
+	def dev(self):
+		return self.dev_set
+	def test(self):
+		return self.test_set
 
 	# stase is R44: 1 ego + 10 cars, 4 coordonates (x,y,vx,vy) each
 	def _randomStartState(self):
