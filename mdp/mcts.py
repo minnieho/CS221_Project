@@ -33,8 +33,12 @@ def mcts(mdp, depth=12, iters=100, explorConst=1.0, tMaxRollouts=200, reuseTree=
 		if d == 0: # we stop exploring the tree, just estimate Qval here
 			return rollout(s, tMax, pi0)
 		if s not in Tree:
-			for a in mdp.actions(s):
-				Nsa[(s,a)], Ns[s], Q[(s,a)] =  0, 1, 0. # TODO use expert knowledge
+			if 'nnet' in args.mcts:
+				for a in mdp.actions(s):
+					Nsa[(s,a)], Ns[s], Q[(s,a)] =  1, 1, nnet.getQ(np.array(s), mdp.action_index(a))
+			else:
+				for a in mdp.actions(s):
+					Nsa[(s,a)], Ns[s], Q[(s,a)] =  0, 1, 0. # TODO use expert knowledge
 			Tree.add(s)
 			# use tMax instead of d: we want to rollout deeper
 			return rollout(s, tMax, pi0)
@@ -50,9 +54,12 @@ def mcts(mdp, depth=12, iters=100, explorConst=1.0, tMaxRollouts=200, reuseTree=
 	def rollout(s, d, pi0):
 		if d == 0 or mdp.isEnd(s):
 			return 0
-		a = pi0(s)
-		sp, r = mdp.sampleSuccReward(s, a)
-		return r + mdp.discount() * rollout(sp, d-1, pi0)
+		if 'nnet' in args.mcts:
+			return nnet.getV(np.array(s))
+		else:
+			a = pi0(s)
+			sp, r = mdp.sampleSuccReward(s, a)
+			return r + mdp.discount() * rollout(sp, d-1, pi0)
 
 	s = mdp.startState()
 	step = 1
@@ -88,8 +95,9 @@ def mcts(mdp, depth=12, iters=100, explorConst=1.0, tMaxRollouts=200, reuseTree=
 #mdp = TransportationMDP(N=10)
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--mcts', default='vanilla', help="vanilla or nnet")
 parser.add_argument('--nn', default='dnn', help="dnn or cnn")
-parser.add_argument('--restore', default='dnn', help="File in models containing weights to load for mcts-nnet")
+parser.add_argument('--restore', default='dnn', help="File in models containing weights to load for mcts nnet")
 args = parser.parse_args()
 
 mdp = ActMDP()
