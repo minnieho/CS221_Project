@@ -20,11 +20,8 @@ def dqn(mdp, args, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, ep
 			a = agent.act(mdp.normalize_state(s), eps) # Acthung: a is an index in the action set !!!
 			sp, r = mdp.sampleSuccReward(s, a, actionIndex=True) # BUG FIX !!! a is an index
 			done = mdp.isEnd(sp)
-			agent.step(s, a, r, mdp.normalize_state(sp), done) # Achtung: a is an index in the action set !!!
-
+			agent.step(mdp.normalize_state(s), a, r, mdp.normalize_state(sp), done) # Achtung: a is an index in the action set !!!
 			ttc, _ = mdp._get_smallest_TTC(sp)
-			#if best_mean_score > -10:
-			#	print("Step {}: ttc={:.5f} (a,r,sp)=({}, {:.5f}, {})".format(t, ttc, a,r,sp[0:4]))
 			score += r
 			if done:
 				break
