@@ -6,37 +6,9 @@ import pdb
 
 import argparse
 
-def dqn(mdp, args, n_epochs=5, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
+def dqn(mdp, args, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
 
 	agent = Agent(mdp.state_size(), mdp.action_size(), mdp.discount(), args, seed=0)
-
-	# scores_window = deque(maxlen=100) # last 100 scores
-	# mean_score = -math.inf
-	# avg_tr_loss = 0
-	# eps = eps_start
-	# iters = 0
-	# for num_epoch in range(n_epochs):
-	# 	for num_s, s in enumerate(mdp.train()):
-	# 		score = 0
-	# 		for t in range(max_t):
-	# 			iters += 1
-	# 			a = agent.act(mdp.normalize_state(s), eps) # a is an index !!!
-	# 			sp, r = mdp.sampleSuccReward(s, a, actionIndex=True) # a is an index !!!
-	# 			done = mdp.isEnd(sp)
-	# 			l = agent.step(mdp.normalize_state(s), a, r, mdp.normalize_state(sp), done) # a is an index !!!
-	# 			if l is not None:
-	# 				avg_tr_loss += l.item()
-	# 			ttc, _ = mdp._get_smallest_TTC(sp)
-	# 			score += r
-	# 			if done:
-	# 				break
-	# 			s = sp
-	# 			if iters%100 == 99:
-	# 				print("Epoch no {}: sample {} iter {} avg_tr_loss: {:0.4f} sliding_score: {:.2f}".format(num_epoch, num_s, iters, avg_tr_loss/100, mean_score))
-	# 				avg_tr_loss = 0
-	# 		scores_window.append(score)
-	# 		mean_score = np.mean(scores_window)
-	# 		eps = max(eps_end, eps_decay*eps)
 
 	best_mean_score = -math.inf
 	scores_window = deque(maxlen=100) # last 100 scores

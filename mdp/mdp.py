@@ -124,9 +124,9 @@ class ActMDP(object): # Anti Collision Tests problem
 		self.create_validation_sets()
 
 	def create_validation_sets(self):
-		self.train_set = [self._randomStartState() for _ in range(8000)]
-		self.dev_set = [self._randomStartState() for _ in range(1000)]
-		self.test_set = [self._randomStartState() for _ in range(1000)]
+		self.train_set = [self._randomStartState() for _ in range(80)]
+		self.dev_set = [self._randomStartState() for _ in range(10)]
+		self.test_set = [self._randomStartState() for _ in range(10)]
 
 	def train(self):
 		return self.train_set

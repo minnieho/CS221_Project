@@ -15,8 +15,8 @@ from datetime import datetime
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 BUFFER_SIZE = int(1e5)
-BATCH_SIZE = 4 # 64
-TARGET_UPDATE = 100 # update target network every ... TODO TO BE TUNED 1000 looks OK
+BATCH_SIZE = 64 # 64
+TARGET_UPDATE = 1000 # update target network every ... TODO TO BE TUNED 1000 looks OK
 LR = 5e-4
 
 
