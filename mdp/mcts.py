@@ -5,6 +5,9 @@ import math
 import pdb
 import time
 from mdp import *
+import dqn_agent as dqn
+
+import argparse
 
 ## Inference (Algorithms)
 
@@ -83,5 +86,16 @@ def mcts(mdp, depth=12, iters=100, explorConst=1.0, tMaxRollouts=200, reuseTree=
 #print(mdp.succProbReward(3, 'tram'))
 
 #mdp = TransportationMDP(N=10)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--nn', default='dnn', help="dnn or cnn")
+parser.add_argument('--restore', default='dnn', help="File in models containing weights to load for mcts-nnet")
+args = parser.parse_args()
+
 mdp = ActMDP()
+print("Loading dqn agent: models/{}.pth.tar ...".format(args.restore))
+nnet = dqn.Agent(mdp.state_size(), mdp.action_size(), mdp.discount(), args, seed=0)
+print("Loading dqn agent: done (not used yet)".format(args.restore))
+#pdb.set_trace()
+
 mcts(mdp)
