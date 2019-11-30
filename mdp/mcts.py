@@ -35,7 +35,7 @@ def mcts(mdp, depth=12, iters=100, explorConst=1.0, tMaxRollouts=200, reuseTree=
 		if s not in Tree:
 			if 'nnet' in args.mcts:
 				for a in mdp.actions(s):
-					Nsa[(s,a)], Ns[s], Q[(s,a)] =  1, 1, nnet.getQ(np.array(s), mdp.action_index(a))
+					Nsa[(s,a)], Ns[s], Q[(s,a)] =  1, 1, nnet.getQ(mdp.normalize_state(s), mdp.action_index(a))
 			else:
 				for a in mdp.actions(s):
 					Nsa[(s,a)], Ns[s], Q[(s,a)] =  0, 1, 0. # TODO use expert knowledge
@@ -55,7 +55,7 @@ def mcts(mdp, depth=12, iters=100, explorConst=1.0, tMaxRollouts=200, reuseTree=
 		if d == 0 or mdp.isEnd(s):
 			return 0
 		if 'nnet' in args.mcts:
-			return nnet.getV(np.array(s))
+			return nnet.getV(mdp.normalize_state(s))
 		else:
 			a = pi0(s)
 			sp, r = mdp.sampleSuccReward(s, a)
@@ -107,11 +107,10 @@ print("Loading dqn agent: done (not used yet)".format(args.restore))
 #pdb.set_trace()
 
 s = mdp.startState()
-s = np.array(s) # converts list (hashable for dict) to np.array usable for torch
 ttc, _ = mdp._get_smallest_TTC(s)
-print("V(startState)={}, ttc={} speed={}".format(nnet.getV(s), ttc, s[3]))
+print("V(startState)={}, ttc={} speed={}".format(nnet.getV(mdp.normalize_state(s)), ttc, s[3]))
 for action in mdp.actions(s):
 	a = mdp.action_index(action)
-	print("Q(startState, {})={}".format(action, nnet.getQ(s,a)))
+	print("Q(startState, {})={}".format(action, nnet.getQ(mdp.normalize_state(s),a)))
 
 mcts(mdp)

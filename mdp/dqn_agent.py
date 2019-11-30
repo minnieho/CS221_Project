@@ -177,8 +177,6 @@ class Agent():
 	def save(self, episode, mean_score, is_best=True):
 		now = datetime.now()
 		dt_string = now.strftime("%d-%m-%Y_%H:%M:%S")
-		#filename = 'dnnStep'+str(episode)+'Score'+"{:.2f}".format(mean_score)+'Date'+dt_string
-		#filename = 'dnnStep'+str(episode)+'Score'+"{:.2f}".format(mean_score)
 		filename = self.args.nn+'Date'+dt_string+'Episode'+str(episode)+'Score'+"{:.2f}".format(mean_score)
 		print("Save model {} with mean_score {}".format(filename, mean_score))
 		utils.save_checkpoint({'episode': episode,

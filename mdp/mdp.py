@@ -301,6 +301,17 @@ class ActMDP(object): # Anti Collision Tests problem
 	def states(self):
 		return self.reachable_states
 
+	def normalize_state(self, s):
+		dmax = 200.
+		vmax = 30.
+		ns = np.zeros_like(s)
+		for i in range(int(len(s)/4)):
+			ns[i*4] = s[i*4]/dmax
+			ns[i*4+1] = s[i*4+1]/dmax
+			ns[i*4+2] = s[i*4+2]/vmax
+			ns[i*4+3] = s[i*4+3]/vmax
+		return ns
+
 	def succProbReward(self, s, a, actionIndex=False):
 		if actionIndex:
 			a = self.action_set[a] # convert action index to action value (bugfix for DQN)
