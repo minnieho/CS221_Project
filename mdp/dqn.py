@@ -190,6 +190,18 @@ class Agent():
 								checkpoint = 'models/',
 								filename=filename)
 
+# not used so far
+def normalize_state(s):
+	dmax = 200.
+	vmax = 30.
+	ns = np.zeros_like(s)
+	for i in range(len(s)/4):
+		ns[i*4] = s[i*4]/dmax
+		ns[i*4+1] = s[i*4+1]/dmax
+		ns[i*4+2] = s[i*4+2]/vmax
+		ns[i*4+3] = s[i*4+3]/vmax
+	pdb.set_trace()
+	return tuple(ns)
 
 def dqn(mdp, args, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
 
@@ -209,15 +221,16 @@ def dqn(mdp, args, n_episodes=50000, max_t=1000, eps_start=1.0, eps_end=0.01, ep
 			done = mdp.isEnd(sp)
 			agent.step(s, a, r, sp, done)
 
-			ttc = mdp._get_smallest_TTC(sp)
-			#print("Step {}: ttc={:.5f} (a,r,sp)=({}, {:.5f}, {})".format(t, ttc, a,r,sp[0:4]))
+			ttc, _ = mdp._get_smallest_TTC(sp)
+			#if best_mean_score > -10:
+			#	print("Step {}: ttc={:.5f} (a,r,sp)=({}, {:.5f}, {})".format(t, ttc, a,r,sp[0:4]))
 			score += r
 			if done:
 				break
 			s = sp
 		scores_window.append(score)
 		mean_score = np.mean(scores_window)
-		if mean_score > best_mean_score:
+		if i_episode > 100 and mean_score > best_mean_score:
 			agent.save(i_episode, mean_score)
 			best_mean_score = mean_score
 		eps = max(eps_end, eps_decay*eps)
