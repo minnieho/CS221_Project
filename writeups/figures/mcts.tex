@@ -1,0 +1,86 @@
+%% LyX 2.3.3 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[twocolumn,english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{float}
+
+\makeatletter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+\usepackage{algorithm,algpseudocode}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows}
+\usetikzlibrary{er,positioning}
+\usetikzlibrary{matrix}
+\tikzset{
+    events/.style={ellipse, draw, align=center},
+}
+
+\usepackage{pgfplots}
+
+\makeatother
+
+\usepackage{babel}
+\usepackage[style=numeric]{biblatex}
+\begin{document}
+{\scriptsize{}\begin{algorithm}[h]
+\begin{algorithmic}[1] 
+\Function{SelectAction}{$s,d$} 
+	\Loop
+		\State \Call {Simulate}{$s,d,\pi_0$}
+	\EndLoop
+	\State \Return arg max$_a\;\text{ }Q(s,a)$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+\begin{algorithm}[h]
+\begin{algorithmic}[1] 
+\Function{Rollout}{$s,d,\pi_0$} 
+	\If {$d=0$}
+		\State \Return $0$
+	\EndIf
+	\If {mcts-nnet}
+		\State \Return nnet.getV(s)
+	\Else
+		\State $a \sim \pi_0(s)$
+		\State $(s',r) \sim G(s,a)$
+		\State \Return $r+\lambda$ \Call {Rollout}{$s',d-1,\pi_0$}
+	\EndIf
+\EndFunction
+\end{algorithmic}
+\end{algorithm}}{\scriptsize\par}
+
+{\scriptsize{}\begin{algorithm}[h]
+\begin{algorithmic}[1] 
+
+\Function{Simulate}{$s,d,\pi_0$} 
+	\If {$d=0$}
+		\State \Return $0$
+	\EndIf
+
+	\If {$s \notin T$} 
+		\For {$a \in A(s)$}
+			\If {mcts-nnet}
+				\State $Q(s,a),N(s,a) \gets $nnet.getQ(s,a)$,1$
+			\Else
+				\State $Q(s,a),N(s,a) \gets 0,0$
+			\EndIf
+		\EndFor
+		\State $T=T \cup \{s\}$
+		\State \Return \Call {Rollout}{$s,d,\pi_0$} 
+	\EndIf
+
+	\State $a \gets \text{arg max}_a\text{ }Q(s,a)+c\sqrt{\frac{logN(s)}{N(s,a)}}$ 
+	\State $(s',r) \sim G(s,a)$
+	\State $q \gets r+\lambda$ \Call {Simulate}{$s,d-1,\pi_0$}
+	\State $N(s,a) \gets N(s,a)+1$
+	\State $Q(s,a) \gets Q(s,a)+ \frac{q-Q(s,a)}{N(s,a)}$
+	\State \Return $q$ 
+\EndFunction
+
+\end{algorithmic}
+\end{algorithm}}{\scriptsize\par}
+
+
+\end{document}

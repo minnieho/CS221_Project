@@ -1,0 +1,585 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\usepackage{algorithm,algpseudocode}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows}
+\usetikzlibrary{er,positioning}
+\usetikzlibrary{matrix}
+\tikzset{
+    events/.style={ellipse, draw, align=center},
+}
+
+\usepackage{pgfplots}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement H
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine biblatex
+\cite_engine_type numerical
+\biblio_style plain
+\biblatex_bibstyle numeric
+\biblatex_citestyle numeric
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 2
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+
+\size scriptsize
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithm}[h]
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithmic}[1] 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Function{SelectAction}{$s,d$} 
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+Loop
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State 
+\backslash
+Call {Simulate}{$s,d,
+\backslash
+pi_0$}
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+EndLoop
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State 
+\backslash
+Return arg max$_a
+\backslash
+;
+\backslash
+text{ }Q(s,a)$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFunction
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithmic}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithm}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithm}[h]
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithmic}[1] 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Function{Rollout}{$s,d,
+\backslash
+pi_0$} 
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+If {$d=0$}
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State 
+\backslash
+Return $0$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+EndIf
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+If {mcts-nnet}
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State 
+\backslash
+Return nnet.getV(s)
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+Else
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State $a 
+\backslash
+sim 
+\backslash
+pi_0(s)$
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State $(s',r) 
+\backslash
+sim G(s,a)$
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State 
+\backslash
+Return $r+
+\backslash
+lambda$ 
+\backslash
+Call {Rollout}{$s',d-1,
+\backslash
+pi_0$}
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+EndIf
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFunction
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithmic}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithm}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\size scriptsize
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithm}[h]
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithmic}[1] 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Function{Simulate}{$s,d,
+\backslash
+pi_0$} 
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+If {$d=0$}
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State 
+\backslash
+Return $0$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+EndIf
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+If {$s 
+\backslash
+notin T$} 
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+For {$a 
+\backslash
+in A(s)$}
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\backslash
+If {mcts-nnet}
+\end_layout
+
+\begin_layout Plain Layout
+
+				
+\backslash
+State $Q(s,a),N(s,a) 
+\backslash
+gets $nnet.getQ(s,a)$,1$
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\backslash
+Else
+\end_layout
+
+\begin_layout Plain Layout
+
+				
+\backslash
+State $Q(s,a),N(s,a) 
+\backslash
+gets 0,0$
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\backslash
+EndIf
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+EndFor
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State $T=T 
+\backslash
+cup 
+\backslash
+{s
+\backslash
+}$
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State 
+\backslash
+Return 
+\backslash
+Call {Rollout}{$s,d,
+\backslash
+pi_0$} 
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+EndIf
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $a 
+\backslash
+gets 
+\backslash
+text{arg max}_a
+\backslash
+text{ }Q(s,a)+c
+\backslash
+sqrt{
+\backslash
+frac{logN(s)}{N(s,a)}}$ 
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $(s',r) 
+\backslash
+sim G(s,a)$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $q 
+\backslash
+gets r+
+\backslash
+lambda$ 
+\backslash
+Call {Simulate}{$s,d-1,
+\backslash
+pi_0$}
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $N(s,a) 
+\backslash
+gets N(s,a)+1$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $Q(s,a) 
+\backslash
+gets Q(s,a)+ 
+\backslash
+frac{q-Q(s,a)}{N(s,a)}$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State 
+\backslash
+Return $q$ 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFunction
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithmic}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithm}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\end_body
+\end_document

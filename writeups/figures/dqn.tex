@@ -1,0 +1,44 @@
+%% LyX 2.3.3 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{float}
+\usepackage{calc}
+\usepackage{amstext}
+
+\makeatletter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+\usepackage{algorithm,algpseudocode}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows}
+\usetikzlibrary{er,positioning}
+\usetikzlibrary{matrix}
+\tikzset{
+    events/.style={ellipse, draw, align=center},
+}
+
+\usepackage{pgfplots}
+
+\makeatother
+
+\usepackage{babel}
+\usepackage[style=numeric]{biblatex}
+\begin{document}
+\textbf{}%
+\fbox{\parbox[t]{0.97\columnwidth}{%
+\textbf{DQN:} Q function is approximated by a Neural Network $\hat{Q}(s,a;w)$
+
+$\text{Loss}_{w}=\left(\hat{Q}(s,a;w)_{\text{pred}}-\left(r+\gamma\;max_{a'}\hat{Q}(s',a';w^{\_})\right)_{\text{target}}\right)^{2}$
+with
+\begin{itemize}
+\item $w\gets w-\eta\nabla_{w}\text{Loss}_{w}(s,a)$ via Batch Gradient
+Descent (batch size 64)
+\item Use Experience Replay buffer to avoid training with correlated samples
+\item Use Fixed Q-target network $\hat{Q}(s',a';w^{\_})$ to stabilize training
+\item Every 1000 iterations update Q-target network weights $w^{\_}\gets w$
+\end{itemize}
+%
+}}
+\end{document}
