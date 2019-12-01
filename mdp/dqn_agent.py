@@ -9,6 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+import logging
 import utils_nn as utils
 from datetime import datetime
 
@@ -55,9 +56,10 @@ class ReplayBuffer:
 class DNN(nn.Module):
 	def __init__(self, inputs=44, outputs=5):
 		super(DNN, self).__init__()
-		self.fc1 = nn.Linear(inputs, 200)
-		self.fc2 = nn.Linear(200, 200)
-		self.fc3 = nn.Linear(200, outputs)
+		nfc = 200
+		self.fc1 = nn.Linear(inputs, nfc)
+		self.fc2 = nn.Linear(nfc, nfc)
+		self.fc3 = nn.Linear(nfc, outputs)
 
 	def forward(self, x):
 		x = F.relu(self.fc1(x))
@@ -69,8 +71,8 @@ class DNN(nn.Module):
 class CNN(nn.Module):
 	def __init__(self, inputs=44, outputs=5):
 		super(CNN, self).__init__()
-		nfilters = 256
-		nfc = 200
+		nfilters = 64
+		nfc = 64
 		# in_channels, out_channels, kernel_size, stride
 		self.conv1 = nn.Conv1d( 1, nfilters,  4, stride=4)
 		self.bn1 = nn.BatchNorm1d(nfilters)
@@ -121,7 +123,7 @@ class Agent():
 
 		if args.restore is not None:
 			restore_path = os.path.join('models/', args.restore + '.pth.tar')
-			print("Restoring parameters from {}".format(restore_path))
+			logging.info("Restoring parameters from {}".format(restore_path))
 			utils.load_checkpoint(restore_path, self.dqn_local, self.optimizer)
 			self.dqn_target.load_state_dict(self.dqn_local.state_dict())
 
@@ -182,8 +184,8 @@ class Agent():
 	def save(self, episode, mean_score, is_best=True):
 		now = datetime.now()
 		dt_string = now.strftime("%d-%m-%Y_%H:%M:%S")
-		filename = self.args.nn+'Date'+dt_string+'Episode'+str(episode)+'Score'+"{:.2f}".format(mean_score)
-		print("Save model {} with mean_score {}".format(filename, mean_score))
+		filename = self.args.nn+'Date'+dt_string+'Iters'+str(episode)+'Score'+"{:.2f}".format(mean_score)
+		logging.info("Save model {} with mean_score {}".format(filename, mean_score))
 		utils.save_checkpoint({'episode': episode,
 								'state_dict': self.dqn_local.state_dict(),
 								'optim_dict' : self.optimizer.state_dict(),
